@@ -13,7 +13,7 @@ protected:
 	_Container	c{};
 
 public:
-	typedef typename _Container				container_type;
+	typedef _Container						container_type;
 	typedef typename _Container::value_type	value_type;
 	typedef typename _Container::size_type	size_type;
 
