@@ -62,6 +62,11 @@ protected:
 		}
 	}
 
+	void _destory(pointer _pos)
+	{
+		_data_allocator.destroy(_pos);
+	}
+
 	vector(size_type __n, const allocator_type& __a)
 	{
 		_start = _allocate(__n);
@@ -252,12 +257,12 @@ public:
 
 	~vector() { _destory( _start, _finish ); }
 
-	vector& operaor=(const vector& __v);
+	vector& operator=(const vector& __v);
 
 	void assign(size_type __n, const value_type& _val) { __assign(__n, _val); }
 
 	template <class _input_iterator>
-	void assign(_input_iterator first, _input_iterator last,
+	void assign(_input_iterator _first, _input_iterator _last,
 		typename ft::enable_if<!ft::is_integral<_input_iterator>::value, typename iterator_traits<_input_iterator>::reference::value>::type* = 0)
 	{
 		__assign(_first, _last, typename iterator_traits<_input_iterator>::iterator_category());
@@ -271,6 +276,7 @@ public:
 
 	void push_back(const value_type& _val)
 	{
+		printf("\n\n%p %p %p\n", _start, _finish, _end_of_storage);
 		if (_finish != _end_of_storage)
 		{
 			_construct(_finish, _val);
@@ -280,6 +286,7 @@ public:
 		{
 			__insert(end(), _val);
 		}
+		printf("%p %p %p\n\n", _start, _finish, _end_of_storage);
 	}
 
 	void swap(vector& __v)
@@ -289,7 +296,7 @@ public:
 		ft::swap(_end_of_storage, __v._end_of_storage);
 	}
 
-	iterator insert(iterator _pos, const T& _val)
+	iterator insert(iterator _pos, const _Ty& _val)
 	{
 		size_type __n = _pos - begin();
 		if (_finish != _end_of_storage && _pos == end())
@@ -304,7 +311,7 @@ public:
 		return ( begin() + __n );
 	}
 
-	iterator insert(iterator _pos, size_type __n, const T& _val)
+	iterator insert(iterator _pos, size_type __n, const _Ty& _val)
 	{
 		return ( __insert(_pos, __n, _val) );
 	}
@@ -315,27 +322,123 @@ public:
 		return	( iterator(__insert(_pos, _first, _last, typename ft::is_integral<_input_iterator>::value())) );
 	}
 
+	void pop_back()
+	{
+		if (size() == 0)
+			return ;
+		--_finish;
+		_destory(_finish);
+	}
 
+	iterator erase(iterator _pos)
+	{
+		if (_pos + 1 != end())
+		{
+			std::copy(_pos + 1, end(), _pos);
+		}
+		--_finish;
+		_destory(_finish);
+		return (_pos);
+	}
+
+	iterator erase(iterator _first, iterator _last)
+	{
+		iterator __i(std::copy(_last, end(), _first));
+		_destory(__i, end().base());
+		_finish = _finish - std::distance(_first, _last);
+		return (_first);
+	}
+
+	void resize(size_type _new_size, const _Ty& _val = _Ty())
+	{
+		if (_new_size < size())
+			erase(begin() + _new_size, end());
+		else
+			insert(end(), _new_size - size(), _val);
+	}
+
+	void clear() { erase(begin(), end()); }
 };
 
 
+template <class _Ty, class _Alloc>
+inline bool 
+operator==(const vector<_Ty, _Alloc>& _Left, const vector<_Ty, _Alloc>& _Right)
+{
+  return ( _Left.size() == _Right.size() && equal(_Left.begin(), _Left.end(), _Right.begin()) );
+}
 
+template <class _Ty, class _Alloc>
+inline bool 
+operator<(const vector<_Ty, _Alloc>& _Left, const vector<_Ty, _Alloc>& _Right)
+{
+  return ( lexicographical_compare(_Left.begin(), _Left.end(), _Right.begin(), _Right.end()) );
+}
 
+template <class _Ty, class _Alloc>
+inline void swap(vector<_Ty, _Alloc>& _Left, vector<_Ty, _Alloc>& _Right)
+{
+  _Left.swap(_Right);
+}
 
+template <class _Ty, class _Alloc>
+inline bool
+operator!=(const vector<_Ty, _Alloc>& _Left, const vector<_Ty, _Alloc>& _Right) {
+  return !(_Left == _Right);
+}
 
+template <class _Ty, class _Alloc>
+inline bool
+operator>(const vector<_Ty, _Alloc>& _Left, const vector<_Ty, _Alloc>& _Right) {
+  return ( _Right < _Left );
+}
 
+template <class _Ty, class _Alloc>
+inline bool
+operator<=(const vector<_Ty, _Alloc>& _Left, const vector<_Ty, _Alloc>& _Right) {
+  return !(_Right < _Left);
+}
 
+template <class _Ty, class _Alloc>
+inline bool
+operator>=(const vector<_Ty, _Alloc>& _Left, const vector<_Ty, _Alloc>& _Right) {
+  return !(_Left < _Right);
+}
 
-
-
-
-
-
-
+template <class _Ty, class _Alloc>
+vector<_Ty,_Alloc>& 
+vector<_Ty,_Alloc>::operator=(const vector<_Ty, _Alloc>& _val)
+{
+	if (&_val != this)
+	{
+		const size_type _vlen = _val.size();
+		if (_vlen > capacity())
+		{
+			pointer _Tmp = _allocate_and_copy(_val.begin(), _val.end(), _vlen);
+			_destroy(_start, _finish);
+			_deallocate(_start, _end_of_storage - _start);
+			_start = _Tmp;
+			_end_of_storage = _start + _vlen;
+		}
+		else if (size() >= _vlen)
+		{
+			iterator __i(copy(_val.begin(), _val.end(), begin()));
+			_destroy(__i, end());
+		}
+		else // vlen > size()
+		{
+			copy(_val.begin(), _val.begin() + size(), _start);
+			uninitialized_copy(_val.begin() + size(), _val.end(), _finish);
+		}
+		_finish = _start + _vlen;
+ 	}
+	return (*this);
+}
 
 template <typename _Ty, typename _Alloc>
 template <typename _forward_iterator>
-vector<_Ty, _Alloc>::pointer vector<_Ty, _Alloc>::_allocate_and_copy(_forward_iterator _first, _forward_iterator _last, size_type __n)
+typename vector<_Ty, _Alloc>::pointer
+vector<_Ty, _Alloc>::_allocate_and_copy(_forward_iterator _first, _forward_iterator _last, size_type __n)
 {
 	pointer __r = _allocate(__n);
 	if (0 <= __n && __n <= max_size())
@@ -370,8 +473,8 @@ template <typename _Ty, typename _Alloc>
 template <typename _input_iterator>
 void vector<_Ty, _Alloc>::__initailize(_input_iterator _first, _input_iterator _last, input_iterator_tag)
 {
-	fot (; _first != _last; ++first)
-		push_back(*first);
+	for (; _first != _last; ++_first)
+		push_back(*_first);
 }
 
 template <typename _Ty, typename _Alloc>
@@ -381,7 +484,7 @@ void vector<_Ty, _Alloc>::__initailize(_forward_iterator _first, _forward_iterat
 	size_type __n = std::distance(_first, _last);
 
 	_start = _allocate(__n);
-	_finish = std::uninitialized_copy(_first, _last, _strat);
+	_finish = std::uninitialized_copy(_first, _last, _start);
 	_end_of_storage = _start + __n;
 }
 
@@ -441,7 +544,7 @@ void vector<_Ty, _Alloc>::__assign(_forward_iterator _first, _forward_iterator _
 	else
 	{
 		iterator _new_finish(std::copy(_first, _last, _start));
-		_destory(_new_finish, end());
+		_destory(_new_finish, end().base());
 		_finish = _new_finish.base();
 	}
 }
@@ -460,19 +563,168 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, const _Ty &_val)
 	else
 	{
 		const size_type _old_size = size();
+		const size_type _new_capa = _old_size != 0 ? _old_size * 2 : 1;
+		iterator _new_start(_allocate(_new_capa));
+		iterator _new_finish(_new_start);	// initialize
+		try
+		{
+			_new_finish = std::uninitialized_copy(iterator(_start), _pos, _new_start);
+			_construct(_new_finish.base(), _val);
+			_new_finish = std::uninitialized_copy(_pos, iterator(_finish), _new_finish);
+
+		}
+		catch(const std::exception& e)
+		{
+			_destory(_new_start.base(), _new_finish.base());
+			_deallocate(_new_start.base(), _new_capa);
+			std::cerr << e.what() << '\n';
+		}
+		// copy success
+		_destory(_start, _finish);
+		_deallocate(_start, _end_of_storage - _start);
+		_start = _new_start.base();
+		_finish = _new_finish.base();
+		_end_of_storage = _new_start.base() + _new_capa;
 	}
 }
 
-// template <typename _Ty, typename _Alloc>
-// iterator vector<_Ty, _Alloc>::__insert(iterator _pos, size_type __n, const _Ty &_val);
+template <typename _Ty, typename _Alloc>
+typename vector<_Ty, _Alloc>::iterator
+vector<_Ty, _Alloc>::__insert(iterator _pos, size_type __n, const _Ty &_val)
+{
+	iterator __r(_pos);
+	if (__n != 0)
+	{
+		// capacity >= size() + __n
+		if (size_type(_end_of_storage - _finish) >= __n)
+		{
+			_Ty _v_copy = _val;
+			const size_type num_pos_to_end = end() - _pos;
+			iterator _old_finish(_finish);
+			if (num_pos_to_end > __n)
+			{
+				std::uninitialized_copy(_finish - __n, _finish, _finish);
+				_finish += __n;
+				std::copy_backward(_pos, _old_finish - __n, _old_finish);
+				std::fill(_pos, _pos + __n, _val);
+			}
+			else
+			{
+				std::uninitialized_copy(_finish - __n, _finish, _finish);
+				_finish += __n;
+				std::fill(_pos, _pos + __n, _val);
+			}
+		}
+		else
+		{
+			// capacity < size() + n
+			const size_type _old_size = size();
+			const size_type _new_capa = _old_size + std::max(_old_size, __n);
+			iterator _new_start(_allocate(_new_capa));
+			iterator _new_finish(_new_start);
+			try
+			{
+				// std::vector - capacity == 0, _pos != being() or end() (ex) begin() + 1 : segfault
+				_new_finish = std::uninitialized_copy(iterator(_start), _pos, _new_start);
+				__r = _new_finish;
+				_new_finish = std::uninitialized_fill_n(_new_finish, __n, _val);
+				_new_finish = std::uninitialized_copy(_pos, iterator(_finish), _new_finish);
+			}
+			catch(const std::exception& e)
+			{
+				_destory(_new_start.base(), _new_finish.base());
+				_deallocate(_new_start, _new_capa);
+				std::cerr << e.what() << '\n';
+			}
+			// copy success
+			_destory(_start, _finish);
+			_deallocate(_start, _end_of_storage - _start);
+			_start = _new_start.base();
+			_finish = _new_finish.base();
+			_end_of_storage = _new_start.base() + _new_capa;
+		}
+	}
+	return (__r);
+}
 
-// template <typename _Ty, typename _Alloc>
-// template <typename _input_iterator>
-// iterator vector<_Ty, _Alloc>::__insert(iterator _pos, _input_iterator _first, _input_iterator _last, input_iterator_tag);
+template <typename _Ty, typename _Alloc>
+template <typename _input_iterator>
+typename vector<_Ty, _Alloc>::iterator 
+vector<_Ty, _Alloc>::__insert(iterator _pos, _input_iterator _first, _input_iterator _last, input_iterator_tag)
+{
+	iterator _Tmp(_first);
+	for(; _Tmp != _last; ++_Tmp)
+	{
+		_pos = insert(_pos, *_Tmp);
+		++_pos;
+	}
+	iterator __r(_pos - std::distance(_first, _last));
+	return (__r);
+}
 
-// template <typename _Ty, typename _Alloc>
-// template <typename _forward_iterator>
-// iterator vector<_Ty, _Alloc>::__insert(iterator _pos, _forward_iterator _first, _forward_iterator _last, forward_iterator_tag);
+template <typename _Ty, typename _Alloc>
+template <typename _forward_iterator>
+typename vector<_Ty, _Alloc>::iterator 
+vector<_Ty, _Alloc>::__insert(iterator _pos, _forward_iterator _first, _forward_iterator _last, forward_iterator_tag)
+{
+	iterator __r(_pos);
+	if (_first != _last)
+	{
+		size_type __n = std::distance(_first, _last);
+		// capacity >= size() + __n
+		if (size_type(_end_of_storage - _finish) >= __n)
+		{
+			const size_type num_pos_to_end = end() - _pos;
+			iterator _old_finish(_finish);
+			if (num_pos_to_end > __n)
+			{
+				std::uninitialized_copy(_finish - __n, _finish, _finish);
+				_finish += __n;
+				std::copy_backward(_pos, _old_finish - __n, _old_finish);
+				std::copy(_first, _last, _pos);
+			}
+			else
+			{
+				_forward_iterator _mid = _first;
+				std::advance(_mid, num_pos_to_end);
+				std::uninitialized_copy(_mid, _last, _finish);
+				_finish = __n - num_pos_to_end;
+				std::uninitialized_copy(_pos, _old_finish, _finish);
+				_finish += num_pos_to_end;
+				std::copy(_first, _mid, _pos);
+			}
+		}
+		else
+		{
+			// capacity < size() + n
+			const size_type _old_size = size();
+			const size_type _new_capa = _old_size + std::max(_old_size, __n);
+			iterator _new_start(_allocate(_new_capa));
+			iterator _new_finish(_new_start);
+			try
+			{
+				// std::vector - capacity == 0, _pos != being() or end() (ex) begin() + 1 : segfault
+				_new_finish = std::uninitialized_copy(iterator(_start), _pos, _new_start);
+				__r = _new_finish;
+				_new_finish = std::uninitialized_copy(_first, _last, _new_finish);
+				_new_finish = std::uninitialized_copy(_pos, iterator(_finish), _new_finish);
+			}
+			catch(const std::exception& e)
+			{
+				_destory(_new_start.base(), _new_finish.base());
+				_deallocate(_new_start, _new_capa);
+				std::cerr << e.what() << '\n';
+			}
+			// copy success
+			_destory(_start, _finish);
+			_deallocate(_start, _end_of_storage - _start);
+			_start = _new_start.base();
+			_finish = _new_finish.base();
+			_end_of_storage = _new_start.base() + _new_capa;
+		}
+	}
+	return (__r);
+}
 
 _FT_END
 #endif

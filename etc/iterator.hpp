@@ -27,14 +27,14 @@ class reverse_iterator :
 	public iterator <	typename iterator_traits<_Iter>::iterator_category,
 						typename iterator_traits<_Iter>::value_type,
 						typename iterator_traits<_Iter>::difference_type,
-						typename iterator_traits<_Iter>::pointer_type,
-						typename iterator_traits<_Iter>::reference_type >
+						typename iterator_traits<_Iter>::pointer,
+						typename iterator_traits<_Iter>::reference >
 {
 protected:
 	_Iter current;
 public:
 	// Member type
-	typedef typename _Iter										iterator_type;
+	typedef _Iter												iterator_type;
 	typedef typename iterator_traits<_Iter>::iterator_category	iterator_category;
 	typedef typename iterator_traits<_Iter>::value_type			value_type;
 	typedef typename iterator_traits<_Iter>::difference_type	difference_type;
@@ -46,7 +46,7 @@ public:
 	explicit reverse_iterator (const iterator_type& it) : current(it) {}
 	reverse_iterator (const reverse_iterator<_Iter>& rev_it) : current(rev_it.current) {}
 	template <typename _Iter2>
-	reverse_iterator (const reverse_iterator<_Ite2r>& rev_it) : current(rev_it.base()) {}
+	reverse_iterator (const reverse_iterator<_Iter2>& rev_it) : current(rev_it.base()) {}
 	reverse_iterator &operator=(const reverse_iterator<_Iter>& _Right)
 	{
 		this->current = _Right.current;
@@ -192,15 +192,15 @@ class __normal_iterator :
 	public iterator <	typename iterator_traits<_Iter>::iterator_category,
 						typename iterator_traits<_Iter>::value_type,
 						typename iterator_traits<_Iter>::difference_type,
-						typename iterator_traits<_Iter>::pointer_type,
-						typename iterator_traits<_Iter>::reference_type >
+						typename iterator_traits<_Iter>::pointer,
+						typename iterator_traits<_Iter>::reference >
 {
 protected:
 	_Iter current;
 
 public:
 	// Member type
-	typedef typename _Iter										iterator_type;
+	typedef _Iter												iterator_type;
 	typedef typename iterator_traits<_Iter>::iterator_category	iterator_category;
 	typedef typename iterator_traits<_Iter>::value_type			value_type;
 	typedef typename iterator_traits<_Iter>::difference_type	difference_type;
@@ -212,8 +212,8 @@ public:
 	explicit __normal_iterator (const iterator_type& _It) : current(_It) {}
 	// Allow iterator to const_iterator conversion
 	template <typename _Iter2>
-	__normal_iterator (const __normal_iterator<_Ite2r, _Container>& _It) : current(_It.base()) {}
-	__normal_iterator &operator=(const __normal_iterator<_Iter>& _Right)
+	__normal_iterator (const __normal_iterator<_Iter2, _Container>& _It) : current(_It.base()) {}
+	__normal_iterator &operator=(const __normal_iterator<_Iter, _Container>& _Right)
 	{
 		this->current = _Right.current;
 		return (*this);
