@@ -276,7 +276,6 @@ public:
 
 	void push_back(const value_type& _val)
 	{
-		printf("\n\n%p %p %p\n", _start, _finish, _end_of_storage);
 		if (_finish != _end_of_storage)
 		{
 			_construct(_finish, _val);
@@ -285,8 +284,8 @@ public:
 		else
 		{
 			__insert(end(), _val);
+			++_finish;
 		}
-		printf("%p %p %p\n\n", _start, _finish, _end_of_storage);
 	}
 
 	void swap(vector& __v)
