@@ -6,11 +6,11 @@
 #include <vector>
 
 _FT_BEGIN
-template <typename _Ty, typename _Container = std::vector<_Ty>>
+template <typename _Ty, typename _Container = std::vector<_Ty> >
 class stack
 {
 protected:
-	_Container	c{};
+	_Container	c;
 
 public:
 	typedef _Container						container_type;

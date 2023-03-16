@@ -1,6 +1,7 @@
 #ifndef ALGORITHM_HPP
 #define ALGORITHM_HPP
 #include "basic_macro.hpp"
+#include <algorithm>
 #include <cstring>
 
 _FT_BEGIN
