@@ -42,75 +42,6 @@ protected:
 		return ( _data_allocator.allocate(__n) );
 	}
 
-	template <class _input_iterator, class _forward_iterator>
-	_forward_iterator uninitialized_copy(_input_iterator _first, _input_iterator _last, _forward_iterator _result)
-	{
-		for (; _first != _last; ++_result, ++_first)
-			new (static_cast<void *>(&*_result))
-				typename iterator_traits<_forward_iterator>::value_type(*_first);
-		return ( _result );
-	}
-
-	template <class _forward_iterator, class _Ty2>
-	_forward_iterator uninitialized_fill(_forward_iterator _first, _forward_iterator _last, const _Ty2 &_val)
-	{
-		for (; _first != _last; ++_first)
-			new (static_cast<void *>(&*_first))
-				typename iterator_traits<_forward_iterator>::value_type(_val);
-		return ( _last );
-	}
-
-	template <class _forward_iterator, class _size, class _Ty2>
-	_forward_iterator uninitialized_fill_n(_forward_iterator _first, _size __n, const _Ty2 &_val)
-	{
-		for (; __n--; ++_first)
-			new (static_cast<void *>(&*_first))
-				typename iterator_traits<_forward_iterator>::value_type(_val);
-		return ( _first );
-	}
-
-	template <class _forward_iterator, class T>
-	void fill(_forward_iterator first, _forward_iterator last, const T &val)
-	{
-		while (first != last)
-		{
-			*first = val;
-			++first;
-		}
-	}
-
-	template <class _outpur_iterator, class Size, class T>
-	_outpur_iterator fill_n(_outpur_iterator first, Size n, const T &val)
-	{
-		while (n > 0)
-		{
-			*first = val;
-			++first;
-			--n;
-		}
-		return first; // since C++11
-	}
-
-	template <class _input_iterator, class _outpur_iterator>
-	_outpur_iterator copy(_input_iterator first, _input_iterator last, _outpur_iterator result)
-	{
-		while (first != last)
-		{
-			*result = *first;
-			++result;
-			++first;
-		}
-		return result;
-	}
-
-	template <class _bidirectional_iterator1, class _bidirectional_iterator2>
-	_bidirectional_iterator2 copy_backward(_bidirectional_iterator1 first, _bidirectional_iterator1 last, _bidirectional_iterator2 result)
-	{
-		while (last != first)
-			*(--result) = *(--last);
-		return result;
-	}
-
 	void _construct(pointer __p, const _Ty& _val)
 	{
 		if (__p)
@@ -304,14 +235,14 @@ public:
 	{
 		(void)_alloc;
 		_start = _allocate(__n);
-		_finish = uninitialized_fill_n(_start, __n, _val);
+		_finish = ft::uninitialized_fill_n(_start, __n, _val);
 		_end_of_storage = _start + __n;
 	}
 
 	vector(const vector& __v)
 	{
 		_start = _allocate(__v.size());
-		_finish = uninitialized_copy(__v.begin(), __v.begin() + __v.size(), _start);
+		_finish = ft::uninitialized_copy(__v.begin(), __v.begin() + __v.size(), _start);
 		_end_of_storage = _start + __v.size();
 	}
 
@@ -405,7 +336,7 @@ public:
 	{
 		if (_pos + 1 != end())
 		{
-			copy(_pos + 1, end(), _pos);
+			ft::copy(_pos + 1, end(), _pos);
 		}
 		--_finish;
 		_destroy(_finish);
@@ -414,7 +345,7 @@ public:
 
 	iterator erase(iterator _first, iterator _last)
 	{
-		iterator __i(copy(_last, end(), _first));
+		iterator __i(ft::copy(_last, end(), _first));
 		_destroy(__i.base(), end().base());
 		_finish = _finish - ft::distance(_first, _last);
 		return (_first);
@@ -493,13 +424,13 @@ vector<_Ty,_Alloc>::operator=(const vector<_Ty, _Alloc>& _val)
 		}
 		else if (size() >= _vlen)
 		{
-			iterator __i(copy(_val.begin(), _val.end(), begin()));
+			iterator __i(ft::copy(_val.begin(), _val.end(), begin()));
 			_destroy(__i.base(), end().base());
 		}
 		else // vlen > size()
 		{
-			copy(_val.begin(), _val.begin() + size(), _start);
-			uninitialized_copy(_val.begin() + size(), _val.end(), _finish);
+			ft::copy(_val.begin(), _val.begin() + size(), _start);
+			ft::uninitialized_copy(_val.begin() + size(), _val.end(), _finish);
 		}
 		_finish = _start + _vlen;
  	}
@@ -516,7 +447,7 @@ vector<_Ty, _Alloc>::_allocate_and_copy(_forward_iterator _first, _forward_itera
 	{
 		try
 		{
-			uninitialized_copy(_first, _last, __r);
+			ft::uninitialized_copy(_first, _last, __r);
 		}
 		catch (const std::bad_alloc &__b)
 		{
@@ -528,7 +459,7 @@ vector<_Ty, _Alloc>::_allocate_and_copy(_forward_iterator _first, _forward_itera
 	{
 		try
 		{
-			uninitialized_copy(_first, _last, __r);
+			ft::uninitialized_copy(_first, _last, __r);
 		}
 		catch (const std::length_error &__l)
 		{
@@ -554,7 +485,7 @@ void vector<_Ty, _Alloc>::__initailize(_forward_iterator _first, _forward_iterat
 	size_type __n = ft::distance(_first, _last);
 
 	_start = _allocate(__n);
-	_finish = uninitialized_copy(_first, _last, _start);
+	_finish = ft::uninitialized_copy(_first, _last, _start);
 	_end_of_storage = _start + __n;
 }
 
@@ -568,12 +499,12 @@ void	vector<_Ty, _Alloc>::__assign(size_type __n, const _Ty& _val)
 	}
 	else if (__n > size())
 	{
-		fill(begin(), end(), _val);
-		_finish = uninitialized_fill_n(_finish, __n - size(), _val);
+		ft::fill(begin(), end(), _val);
+		_finish = ft::uninitialized_fill_n(_finish, __n - size(), _val);
 	}
 	else
 	{
-		erase(fill_n(begin(), __n, _val), end());
+		erase(ft::fill_n(begin(), __n, _val), end());
 	}
 }
 
@@ -608,12 +539,12 @@ void vector<_Ty, _Alloc>::__assign(_forward_iterator _first, _forward_iterator _
 	{
 		_forward_iterator _mid = _first;
 		ft::advance(_mid, size());
-		copy(_first, _mid, _start);
-		_finish = uninitialized_copy(_mid, _last, _finish);
+		ft::copy(_first, _mid, _start);
+		_finish = ft::uninitialized_copy(_mid, _last, _finish);
 	}
 	else
 	{
-		iterator _new_finish(copy(_first, _last, _start));
+		iterator _new_finish(ft::copy(_first, _last, _start));
 		_destroy(_new_finish.base(), end().base());
 		_finish = _new_finish.base();
 	}
@@ -627,7 +558,7 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, const _Ty &_val)
 		_construct(_finish, *(_finish - 1));
 		++_finish;
 		_Ty _val_copy = _val;
-		copy_backward(_pos, iterator(_finish - 2), iterator(_finish - 1));
+		ft::copy_backward(_pos, iterator(_finish - 2), iterator(_finish - 1));
 		*_pos = _val_copy;
 	}
 	else
@@ -638,10 +569,10 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, const _Ty &_val)
 		iterator _new_finish(_new_start);	// initialize
 		try
 		{
-			_new_finish = uninitialized_copy(iterator(_start), _pos, _new_start);
+			_new_finish = ft::uninitialized_copy(iterator(_start), _pos, _new_start);
 			_construct(_new_finish.base(), _val);
 			++_new_finish;
-			_new_finish = uninitialized_copy(_pos, iterator(_finish), _new_finish);
+			_new_finish = ft::uninitialized_copy(_pos, iterator(_finish), _new_finish);
 
 		}
 		catch(const std::exception& e)
@@ -672,16 +603,16 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, size_type __n, const _Ty &_val
 			iterator _old_finish(_finish);
 			if (num_pos_to_end > __n)
 			{
-				uninitialized_copy(_finish - __n, _finish, _finish);
+				ft::uninitialized_copy(_finish - __n, _finish, _finish);
 				_finish += __n;
-				copy_backward(_pos, _old_finish - __n, _old_finish);
-				fill(_pos, _pos + __n, _v_copy);
+				ft::copy_backward(_pos, _old_finish - __n, _old_finish);
+				ft::fill(_pos, _pos + __n, _v_copy);
 			}
 			else
 			{
-				uninitialized_copy(_finish - __n, _finish, _finish);
+				ft::uninitialized_copy(_finish - __n, _finish, _finish);
 				_finish += __n;
-				fill(_pos, _pos + __n, _v_copy);
+				ft::fill(_pos, _pos + __n, _v_copy);
 			}
 		}
 		else
@@ -694,9 +625,9 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, size_type __n, const _Ty &_val
 			try
 			{
 				// std::vector - capacity == 0, _pos != being() or end() (ex) begin() + 1 : segfault
-				_new_finish = uninitialized_copy(iterator(_start), _pos, _new_start);
-				_new_finish = uninitialized_fill_n(_new_finish, __n, _val);
-				_new_finish = uninitialized_copy(_pos, iterator(_finish), _new_finish);
+				_new_finish = ft::uninitialized_copy(iterator(_start), _pos, _new_start);
+				_new_finish = ft::uninitialized_fill_n(_new_finish, __n, _val);
+				_new_finish = ft::uninitialized_copy(_pos, iterator(_finish), _new_finish);
 			}
 			catch(const std::exception& e)
 			{
@@ -740,20 +671,20 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, _forward_iterator _first, _for
 			iterator _old_finish(_finish);
 			if (num_pos_to_end > __n)
 			{
-				uninitialized_copy(_finish - __n, _finish, _finish);
+				ft::uninitialized_copy(_finish - __n, _finish, _finish);
 				_finish += __n;
-				copy_backward(_pos, _old_finish - __n, _old_finish);
-				copy(_first, _last, _pos);
+				ft::copy_backward(_pos, _old_finish - __n, _old_finish);
+				ft::copy(_first, _last, _pos);
 			}
 			else
 			{
 				_forward_iterator _mid = _first;
 				ft::advance(_mid, num_pos_to_end);
-				uninitialized_copy(_mid, _last, _finish);
+				ft::uninitialized_copy(_mid, _last, _finish);
 				_finish += __n - num_pos_to_end;
-				uninitialized_copy(_pos, _old_finish, _finish);
+				ft::uninitialized_copy(_pos, _old_finish, _finish);
 				_finish += num_pos_to_end;
-				copy(_first, _mid, _pos);
+				ft::copy(_first, _mid, _pos);
 			}
 		}
 		else
@@ -766,9 +697,9 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, _forward_iterator _first, _for
 			try
 			{
 				// std::vector - capacity == 0, _pos != being() or end() (ex) begin() + 1 : segfault
-				_new_finish = uninitialized_copy(iterator(_start), _pos, _new_start);
-				_new_finish = uninitialized_copy(_first, _last, _new_finish);
-				_new_finish = uninitialized_copy(_pos, iterator(_finish), _new_finish);
+				_new_finish = ft::uninitialized_copy(iterator(_start), _pos, _new_start);
+				_new_finish = ft::uninitialized_copy(_first, _last, _new_finish);
+				_new_finish = ft::uninitialized_copy(_pos, iterator(_finish), _new_finish);
 			}
 			catch(const std::exception& e)
 			{

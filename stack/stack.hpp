@@ -1,12 +1,10 @@
 #ifndef STACK_HPP
 #define STACK_HPP
 #include "../etc/basic_macro.hpp"
-
-// test
-#include <vector>
+#include "../vector/vector.hpp"
 
 _FT_BEGIN
-template <typename _Ty, typename _Container = std::vector<_Ty> >
+template <typename _Ty, typename _Container = ft::vector<_Ty> >
 class stack
 {
 protected:
@@ -21,8 +19,8 @@ public:
 
 	// Othodox Canonical Form 
 	explicit stack(const _Container& _Cont = _Container()) : c(_Cont) {}
-	stack(const stack& _Other) : c(_Other) {}
-	stack& operator=(const stack& _Other) { *this = _Other; }
+	stack(const stack& _Other) : c(_Other.c) {}
+	stack& operator=(const stack& _Other) { *this->c = _Other.c; }
 	~stack() {};
 
 	// Element Access
@@ -37,7 +35,50 @@ public:
 	void push(const value_type& _Val) { return c.push_back(_Val); }
 	void pop() { c.pop_back(); }
 
+	// Non_member overloads friend
+	template <class __Ty, class __Container>
+	inline friend bool operator==(const stack<__Ty, __Container>& _Left, const stack<__Ty, __Container>& _Right);
+
+	template <class __Ty, class __Container>
+	inline friend bool operator<(const stack<__Ty, __Container>& _Left, const stack<__Ty, __Container>& _Right);
 };
+
+template <class __Ty, class  __Container>
+inline bool operator==(const stack<__Ty, __Container>& _Left, const stack<__Ty, __Container>& _Right)
+{
+	return ( _Left.c == _Right.c );
+}
+
+template <class __Ty, class  __Container>
+inline bool operator!=(const stack<__Ty, __Container>& _Left, const stack<__Ty, __Container>& _Right)
+{
+	return !( _Left == _Right );
+}
+
+template <class __Ty, class  __Container>
+inline bool operator< (const stack<__Ty, __Container>& _Left, const stack<__Ty, __Container>& _Right)
+{
+	return ( _Left.c < _Right.c );
+}
+
+template <class __Ty, class  __Container>
+inline bool operator<=(const stack<__Ty, __Container>& _Left, const stack<__Ty, __Container>& _Right)
+{
+	return !( _Right < _Left );
+}
+
+template <class __Ty, class  __Container>
+inline bool operator> (const stack<__Ty, __Container>& _Left, const stack<__Ty, __Container>& _Right)
+{
+	return ( _Right < _Left );
+}
+
+template <class __Ty, class  __Container>
+inline bool operator>=(const stack<__Ty, __Container>& _Left, const stack<__Ty, __Container>& _Right)
+{
+	return !( _Left < _Right );
+}
+
 
 _FT_END
 
