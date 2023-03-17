@@ -1,8 +1,8 @@
-NAME	=	megaphone
+NAME	=	ft_containers
 CLANG	=	c++
-CFLAGS	=	-Wall -Wextra -Werror #-std=c++98
+CFLAGS	=	-Wall -Wextra -Werror -std=c++98 -pedantic
 
-SRCS	= 	megaphone.cpp
+SRCS	= 	main.cpp
 
 OBJS	= $(SRCS:.cpp=.o)
 RM		= rm -f

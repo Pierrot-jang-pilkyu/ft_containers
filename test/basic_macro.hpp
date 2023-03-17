@@ -8,6 +8,4 @@
 #define _CFT		::
 #define _FT			::ft::
 
-#include <stdio.h>
-
 #endif
