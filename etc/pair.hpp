@@ -9,8 +9,8 @@ struct pair
 	typedef _T1	first_type;
 	typedef _T2	second_type;
 
-	_T1	first;
-	_T2	second;
+	first_type	first;
+	second_type	second;
 
 	pair() : first(), second() {}
 	pair(const _T1& _t1, const _T2& _t2) : first(_t1), second(_t2) {}

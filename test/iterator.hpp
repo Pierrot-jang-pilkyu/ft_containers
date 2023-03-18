@@ -42,7 +42,7 @@ public:
 	typedef typename ft::iterator_traits<_Iter>::reference			reference;
 
 	// Member Function
-	reverse_iterator() {}
+	reverse_iterator() : current(_Iter()) {}
 	explicit reverse_iterator (const iterator_type& it) : current(it) {}
 	reverse_iterator (const reverse_iterator<_Iter>& rev_it) : current(rev_it.current) {}
 	template <typename _Iter2>
@@ -208,7 +208,7 @@ public:
 	typedef typename ft::iterator_traits<_Iter>::reference			reference;
 
 	// Member Function
-	__normal_iterator() {}
+	__normal_iterator() : current(_Iter()) {}
 	explicit __normal_iterator (const iterator_type& _It) : current(_It) {}
 	// Allow iterator to const_iterator conversion
 	template <typename _Iter2>

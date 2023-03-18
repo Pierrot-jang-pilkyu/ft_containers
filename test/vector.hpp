@@ -1,8 +1,8 @@
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
-#include "../etc/iterator.hpp"
-#include "../etc/algorithm.hpp"
-#include "../etc/type_traits.hpp"
+#include "iterator.hpp"
+#include "algorithm.hpp"
+#include "type_traits.hpp"
 #include <memory>
 #include <stdexcept>
 

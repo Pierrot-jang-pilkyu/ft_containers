@@ -71,7 +71,7 @@ _forward_iterator uninitialized_copy(_input_iterator _first, _input_iterator _la
 {
 	for (; _first != _last; ++_result, ++_first)
 		new (static_cast<void *>(&*_result))
-			typename iterator_traits<_forward_iterator>::value_type(*_first);
+			typename ft::iterator_traits<_forward_iterator>::value_type(*_first);
 	return (_result);
 }
 
@@ -80,7 +80,7 @@ _forward_iterator uninitialized_fill(_forward_iterator _first, _forward_iterator
 {
 	for (; _first != _last; ++_first)
 		new (static_cast<void *>(&*_first))
-			typename iterator_traits<_forward_iterator>::value_type(_val);
+			typename ft::iterator_traits<_forward_iterator>::value_type(_val);
 	return (_last);
 }
 
@@ -89,7 +89,7 @@ _forward_iterator uninitialized_fill_n(_forward_iterator _first, _size __n, cons
 {
 	for (; __n--; ++_first)
 		new (static_cast<void *>(&*_first))
-			typename iterator_traits<_forward_iterator>::value_type(_val);
+			typename ft::iterator_traits<_forward_iterator>::value_type(_val);
 	return (_first);
 }
 

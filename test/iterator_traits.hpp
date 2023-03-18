@@ -2,8 +2,10 @@
 #define ITERATOR_TRAITS_HPP
 
 #include "basic_macro.hpp"
+// #include "rb_tree.hpp"
 
 _FT_BEGIN
+
 
 template<class _Iter>
 struct iterator_traits;
@@ -35,7 +37,7 @@ struct iterator_traits<_Ty*>
 {
 	typedef random_access_iterator_tag				iterator_category;
 	typedef _Ty										value_type;
-	typedef ptrdiff_t								difference_type;
+	typedef std::ptrdiff_t								difference_type;
 	typedef value_type*								pointer;
 	typedef value_type&								reference;
 };
@@ -44,11 +46,31 @@ template<class _Ty>
 struct iterator_traits<const _Ty*>
 {
 	typedef random_access_iterator_tag				iterator_category;
-	typedef const _Ty										value_type;
-	typedef ptrdiff_t								difference_type;
+	typedef const _Ty								value_type;
+	typedef std::ptrdiff_t								difference_type;
 	typedef value_type*								pointer;
 	typedef value_type&								reference;
 };
+
+// template<class _Ty>
+// struct iterator_traits<ft::__rb_tree_node<_Ty>* >
+// {
+// 	typedef bidirectional_iterator_tag				iterator_category;
+// 	typedef ft::__rb_tree_node<_Ty>						value_type;
+// 	typedef std::ptrdiff_t								difference_type;
+// 	typedef value_type*								pointer;
+// 	typedef value_type&								reference;
+// };
+
+// template<class _Ty>
+// struct iterator_traits<const ft::__rb_tree_node<_Ty>* >
+// {
+// 	typedef bidirectional_iterator_tag				iterator_category;
+// 	typedef const ft::__rb_tree_node<_Ty>				value_type;
+// 	typedef std::ptrdiff_t								difference_type;
+// 	typedef value_type*								pointer;
+// 	typedef value_type&								reference;
+// };
 
 _FT_END
 #endif
