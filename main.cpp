@@ -114,11 +114,53 @@
 
 int test()
 {
-	ft::rb_tree<int, std::less<int> > rb;
+	ft::rb_tree<int, std::less<int> > myTree;
 
-	rb.insert(10);
+	// myTree.insert(10);
 
-	std::cout << rb.begin()->__value_field << std::endl;
+	// std::cout << myTree.begin()->__value_field << std::endl;
+	// std::cout << myTree.size() << std::endl;
+
+	std::cout << "-------------------------------------" << std::endl;
+	std::cout << "Commands:" << std::endl;
+	std::cout << "   '+Key': Insert element" << std::endl;
+	std::cout << "      'Q': Quit the test program" << std::endl;
+	std::cout << "--------------------------------------" << std::endl;
+	std::cout << "※ In tree draw, '├──key' is left child, '└──key' is right child ※\n" << std::endl;
+
+	std::string userStr;
+
+	while (true) 
+	{
+		std::cout << myTree.show_tree() << std::endl;		// 매 loop마다 트리를 출력하도록 설정한다.
+
+		std::cout << "Command: ";
+		std::cin >> userStr;
+
+		char userOption = userStr[0];		// 사용자 입력값의 첫 글자는 연산 option을 의미한다.
+		userStr.erase(0, 1);				// atoi 함수를 사용하기 위해 첫 글자를 삭제한다.
+		int userVar = std::atoi(userStr.c_str());	// 사용자 입력 문자열을 정수로 바꾼다.
+		// [오류]: 유효하지 않은 연산자일경우 오류이므로 다시 입력하게끔 유도한다.
+		if (userOption != '+' && userOption != 'Q' && userOption != 'q') 
+		{
+			std::cout << "[ERROR] Wrong command! Input command again please" << std::endl;
+			continue;
+		}
+		// 사용자가 입력한 옵션에 따라 대응하는 함수를 호출한다.
+		switch (userOption) 
+		{
+		case '+':
+			myTree.insert(userVar);
+			break;
+		case 'Q': case 'q':
+			std::cout << "Quit program!" << std::endl;
+			return 0;
+		}
+	}
+
+
+
+
 	// A<int> a;
 	// // a.a = 20;
 	// D<A<int> > d(1, a);

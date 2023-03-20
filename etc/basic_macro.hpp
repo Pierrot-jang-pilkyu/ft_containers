@@ -9,5 +9,6 @@
 #define _FT			::ft::
 
 #include <stdio.h>
+#include <string>
 
 #endif

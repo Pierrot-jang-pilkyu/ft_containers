@@ -14,30 +14,34 @@ typedef bool __rb_tree_color_type;
 const __rb_tree_color_type __rb_tree_red = false;
 const __rb_tree_color_type __rb_tree_black = true;
 
-struct __rb_tree_node_base
-{
-	typedef __rb_tree_color_type	__color_type;
-	typedef __rb_tree_node_base*	__base_pointer;
-
-	__color_type					__color;
-	__base_pointer					__parent;
-	__base_pointer					__left;
-	__base_pointer					__right;
-};
-
 template <typename _Ty>
-struct __rb_tree_node : public __rb_tree_node_base
+struct __rb_tree_node
 {
 	typedef bidirectional_iterator_tag	iterator_category;
 	typedef __rb_tree_node<_Ty>			value_type;
 	typedef std::ptrdiff_t				difference_type;
 	typedef __rb_tree_node<_Ty>*		pointer;
 	typedef __rb_tree_node<_Ty>&		reference;
+	typedef __rb_tree_color_type	__color_type;
+
+	__color_type					__color;
+	pointer							__parent;
+	pointer							__left;
+	pointer							__right;
 
 	_Ty		__value_field;
 
-	__rb_tree_node() : __value_field(_Ty()), __color(__rb_tree_red), __parent(0), __left(0), __right(0) {}
+	__rb_tree_node() // : __value_field(_Ty()), __color(__rb_tree_red), __parent(0), __left(0), __right(0) {}
+	{
+		__value_field = _Ty();
+		__color = __rb_tree_red;
+		__parent = 0;
+		__left = 0;
+		__right = 0;
+	}
 	__rb_tree_node(const _Ty& _val) : __value_field(_val), __color(__rb_tree_red), __parent(0), __left(0), __right(0) {}
+	__rb_tree_node(const __rb_tree_node& __n)
+	: __value_field(_Ty(__n.__value_field)), __color(__n.__color), __parent(__n.__parent), __left(__n.__left), __right(__n.__right) {}
 
 	reference operator*() const
 	{
@@ -66,11 +70,69 @@ class __rb_tree_iterator :
 							typename ft::iterator_traits<_Iter>::reference >
 {
 protected:
-	using ft::rb_tree::__increment;
-	using ft::rb_tree::__decrement;
-	using ft::rb_tree::_nil;
-
 	_Iter current;
+	_Iter _nil;
+
+	void __get_nil()
+	{
+		_Iter _Tmp = current;
+		while (_Tmp != _Tmp->__parent->parent)
+			_Tmp = _Tmp->parent;
+		if (_Tmp == _Tmp->__parent->parent)
+			_nil = _Tmp->parent;
+	}
+
+		void __increment()
+	{
+		__get_nil();
+		_Iter __node = current;
+		if (__node->__right != _nil)
+		{
+			__node = __node->__right;
+			while (__node->__left != _nil)
+				__node = __node->__left;
+		}
+		else
+		{
+			pointer _Tmp = __node->__parent;
+			while (__node == _Tmp->__right)
+			{
+				__node = _Tmp;
+				_Tmp = _Tmp->__parent;
+			}
+			__node = _Tmp;
+		}
+		current = __node;
+	}
+
+	void __decrement()
+	{
+		__get_nil();
+		_Iter __node = current;
+		if (__node == _nil)
+		{
+			_Iter __root = _nil->__parent;
+			while ( __root->__right != _nil )
+				__root = __root->__right;
+		}
+		else if (__node->__left != _nil)
+		{
+			__node = __node->__left;
+			while (__node->__right != _nil)
+				__node = __node->__right;
+		}
+		else
+		{
+			pointer _Tmp = __node->__parent;
+			while (__node == _Tmp->left)
+			{
+				__node = _Tmp;
+				_Tmp = _Tmp->parent;
+			}
+			__node = _Tmp;
+		}
+		current = __node;
+	}
 
 public:
 	// Member type
@@ -112,7 +174,7 @@ public:
 
 	__rb_tree_iterator &operator++()
 	{
-		__increment(current, _nil);
+		__increment();
 		return (*this);
 	}
 
@@ -125,7 +187,7 @@ public:
 
 	__rb_tree_iterator &operator--()
 	{
-		__decrement(current, _nil);
+		__decrement();
 		return (*this);
 	}
 
@@ -162,7 +224,6 @@ public:
 	typedef const value_type*								const_pointer;
 	typedef value_type&										reference;
 	typedef const value_type&								const_reference;
-	typedef typename __rb_tree_node_base::__base_pointer	base_pointer;
 	typedef std::ptrdiff_t									difference_type;
 	typedef std::size_t										size_type;
 	typedef __rb_tree_color_type							color_type;
@@ -177,16 +238,16 @@ protected:
 	allocator_type		_data_allocator;
 	compare_type		_compare;
 	size_type			_count;
-	static pointer		_nil;
+	pointer				_nil;
 
-	static pointer __minimum_node(pointer& __root)
+	pointer __minimum_node(pointer& __root)
 	{
 		while ( __left(__root) != _nil )
 			__root = __left(__root);
 		return ( __root );
 	}
 
-	static pointer __maximum_node(pointer& __root)
+	pointer __maximum_node(pointer& __root)
 	{
 		while ( __right(__root) != _nil )
 			__root = __right(__root);
@@ -195,73 +256,38 @@ protected:
 
 	pointer& __root() const { return ( (pointer&)_nil->__parent ); }
 
-	static pointer& __parent(pointer __node) { return ( (pointer&)__node->__parent ); }
-	static pointer& __gparent(pointer __node)
+	pointer& __parent(pointer __node) { return ( (pointer&)__node->__parent ); }
+	pointer& __gparent(pointer __node)
 	{
 		pointer _Tmp = __parent(__node);
 		if (__parent(_Tmp) != 0)
-			return ( (pointer&)(_Tmp->parent) );
+			return ( (pointer&)(_Tmp->__parent) );
 		else
-			return (0);
+			return (_nil);
 	}
-	static pointer& __ggparent(pointer __node)
+	pointer& __ggparent(pointer __node)
 	{
 		pointer _Tmp = __gparent(__node);
 		if (__parent(_Tmp) != 0)
 			return ( (pointer&)(_Tmp->parent) );
 		else
-			return (0);
+			return (_nil);
 	}
-	static pointer& __uncle(pointer __node)
+	pointer& __uncle(pointer __node)
 	{
 		if (__node->__parent != _nil)
 		{
-			if (__node == __node->__parent->__left)
-				return (pointer&)(__node->__parent->__right);
-			else if (__node == __node->__parent->__right)
-				return (pointer&)(__node->__parent->__left);
+			if (__parent(__node) == __gparent(__node)->__left)
+				return (pointer&)(__gparent(__node)->__right);
+			else if (__parent(__node) == __gparent(__node)->__right)
+				return (pointer&)(__gparent(__node)->__left);
 		}
-		else
-			return (0);
+		return (_nil);
 	}
-	static pointer& __left(pointer __node) { return ( (pointer&)__node->__left ); }
-	static pointer& __right(pointer __node) { return ( (pointer&)__node->__right ); }
-	static color_type& __color(pointer __node) { return ( (color_type&)__node->__color ); }
-	static reference __value(pointer __node) { return ( __node->__value_field ); }
-
-	static pointer& __parent(base_pointer __node) { return ( (pointer&)__node->__parent ); }
-	static pointer& __gparent(base_pointer __node)
-	{
-		pointer _Tmp = __parent(__node);
-		if (__parent(_Tmp) != 0)
-			return ( (pointer&)(_Tmp->parent) );
-		else
-			return (0);
-	}
-	static pointer& __ggparent(base_pointer __node)
-	{
-		pointer _Tmp = __gparent(__node);
-		if (__parent(_Tmp) != 0)
-			return ( (pointer&)(_Tmp->parent) );
-		else
-			return (0);
-	}
-	static pointer& __uncle(base_pointer __node)
-	{
-		if (__parent(__node)!= _nil)
-		{
-			if (__node == (pointer&)__node->__parent->__left)
-				return (pointer&)(__node->__parent->__right);
-			else if (__node == __node->__parent->__right)
-				return (pointer&)(__node->__parent->__left);
-		}
-		else
-			return (0);
-	}
-	static pointer& __left(base_pointer __node) { return ( (pointer&)__node->__left ); }
-	static pointer& __right(base_pointer __node) { return ( (pointer&)__node->__right ); }
-	static color_type& __color(base_pointer __node) { return ( (color_type&)__node->__color ); }
-	static reference __value(base_pointer __node) { return ( __value((pointer&)__node) ); }
+	pointer& __left(pointer __node) { return ( (pointer&)__node->__left ); }
+	pointer& __right(pointer __node) { return ( (pointer&)__node->__right ); }
+	color_type& __color(pointer __node) { return ( (color_type&)__node->__color ); }
+	reference __value(pointer __node) { return ( __node->__value_field ); }
 
 	void __left_rotate(pointer __node);
 	void __right_rotate(pointer __node);
@@ -270,15 +296,13 @@ protected:
 
 	ft::pair<iterator, bool> __insert_node(pointer __root, const _Ty& _val);
 
-	void __initialize()
-	{
-		__color(_nil) = __rb_tree_red;
-		(pointer&)_nil->__parent = 0;
-		(pointer&)_nil->__left = _nil;
-		(pointer&)_nil->__right = _nil;
-	}
-
 public:
+	void preorder(pointer root, std::string* stringBuilder, std::string padding, const std::string& pointer, const bool hasRightChild) const;
+
+	std::string show_tree() const;
+
+
+
 
 /*
 **	|------------------------------------------------------Member_function----------------------------------------------------|
@@ -313,52 +337,6 @@ public:
 	const_reverse_iterator rend() const { return const_reverse_iterator( begin() ); }
 
 protected:
-	void __increment(pointer& __node, pointer __nil)
-	{
-		if (__node->__right != __nil)
-		{
-			__node = __node->__right;
-			while (__node->__left != __nil)
-				__node = __node->__left;
-		}
-		else
-		{
-			pointer _Tmp = __node->__parent;
-			while (__node == _Tmp->__right)
-			{
-				__node = _Tmp;
-				_Tmp = __parent(_Tmp);
-			}
-			__node = _Tmp;
-		}
-	}
-
-	void __decrement(pointer &__node, pointer __nil)
-	{
-		if (__node == end().base())
-		{
-			__node = __maximum_node(_nil->__parent);
-		}
-		else if (__node->__left != __nil)
-		{
-			__node = __node->__left;
-			while (__node->__right != __nil)
-				__node = __node->__right;
-		}
-		else
-		{
-			pointer _Tmp = __node->__parent;
-			while (__node == _Tmp->left)
-			{
-				__node = _Tmp;
-				_Tmp = _Tmp->parent;
-			}
-			__node = _Tmp;
-		}
-	}
-
-
-
 	pointer __get_node()
 	{
 		return ( _data_allocator.allocate(1) );
@@ -370,26 +348,18 @@ protected:
 			_data_allocator.deallocate(__p, 1);
 	}
 
-	void __construct(pointer __p, const _Ty& _val)
+	void __construct(_Ty* __p, const _Ty& _val)
 	{
 		if (__p)
 			_data_allocator.construct(__p, _val);
 	}
 
-	void __destroy(pointer _first, pointer _last)
-	{
-		for (; _first != _last; ++_first)
-		{
-			_data_allocator.destroy(_first);
-		}
-	}
-
 	void __destroy(pointer _pos)
 	{
-		_data_allocator.destroy(_pos);
+		_data_allocator.destroy(&_pos->__value_field);
 	}
 
-	pointer __create_node(const value_type& __val)
+	pointer __create_node(const _Ty& __val)
 	{
 		pointer _Tmp = __get_node();
 		_Tmp->__color = __rb_tree_red;
@@ -397,7 +367,7 @@ protected:
 		(pointer&)__right(_Tmp) = _nil;
 		try
 		{
-			_construct(&_Tmp->__value_field, __val);
+			__construct(&_Tmp->__value_field, __val);
 		}
 		catch(const std::exception& e)
 		{
@@ -418,12 +388,20 @@ protected:
 
 	void __destroy_node(pointer __node)
 	{
-		__destroy(&__node->__value_field);
+		__destroy(__node);
 		__node->__left = 0;
 		__node->__right = 0;
 		__put_node(__node);
 	}
 
+	void __initialize()
+	{
+		_nil = __get_node();
+		__color(_nil) = __rb_tree_black;
+		(pointer&)_nil->__parent = 0;
+		(pointer&)_nil->__left = _nil;
+		(pointer&)_nil->__right = _nil;
+	}
 
 	pointer __copy(pointer _first, pointer _last);
 	void	__erase(pointer __p);
@@ -447,33 +425,53 @@ public:
 */
 
 	rb_tree()
-	: _data_allocator(allocator_type()), _count(0), _compare()
-	{ __initialize(); }
-
-	rb_tree(const compare_type& _comp)
-	: _data_allocator(allocator_type()), _count(0), _compare(_comp)
-	{ __initialize(); }
-
-	rb_tree(const compare_type& _comp, const allocator_type& __a)
-	: _data_allocator(__a), _count(0), _compare(_comp)
-	{ __initialize(); }
-
-	rb_tree(const rb_tree_type& __t)
-	: _data_allocator(__t.get_allocater()), _count(0), _compare(__t.__key_comp)
 	{
-		if (__t.__root() == 0)
-			__initialize();
-		else
-		{
-			__color(_nil) = __rb_tree_red;
-			__root() = __copy(__t.__root(), _nil);
-			(pointer&)_nil->__left = _nil;
-			(pointer&)_nil->__right = _nil;
-		}
-		_count = __t._count;
+		__initialize();
+		_data_allocator = allocator_type();
+		_count = 0;
+		_compare = compare_type();
 	}
 
-	~rb_tree() { clear(); }
+	rb_tree(const compare_type& _comp)
+	{
+		__initialize();
+		_data_allocator = allocator_type();
+		_count = 0;
+		_compare = _comp;
+	}
+
+	rb_tree(const compare_type& _comp, const allocator_type& __a)
+	{
+		__initialize();
+		_data_allocator = __a;
+		_count = 0;
+		_compare = _comp;
+	}
+
+	rb_tree(const rb_tree_type& __t)
+	{
+		if (__t.__root() == 0)
+		{
+			__initialize();
+			_data_allocator = allocator_type();
+			_count = 0;
+			_compare = compare_type();
+		}
+		else
+		{
+			_data_allocator = __t.get_allocater();
+			__color(_nil) = __rb_tree_black;
+			__root() = __copy(__t.__root(), _nil);
+			_nil->__left = _nil;
+			_nil->__right = _nil;
+			_count = __t._count;
+		}
+	}
+
+	~rb_tree()
+	{
+		clear();
+	}
 
 	rb_tree_type& operator=(const rb_tree_type& __t);
 
@@ -490,10 +488,12 @@ public:
 		ft::swap(this->_compare, __t->_compare);
 	}
 
-	pair<iterator, bool> insert(const value_type &__val)
-	{ return ( __insert_node(__root(), __val) ); }
+	pair<iterator, bool> insert(const _Ty& __val)
+	{
+		return ( __insert_node(__root(), __val) );
+	}
 
-	iterator insert(iterator __position, const value_type &__val)
+	iterator insert(iterator __position, const _Ty& __val)
 	{ return ( __insert_node(__position.base(), __val).first ); }
 
 	template <class _InputIterator>
@@ -503,7 +503,7 @@ public:
 			insert(*__first);
 	}
 
-	void erase(iterator __position);
+	// void erase(iterator __position);
 	// size_type erase(const key_type &__x);
 	// void erase(iterator __first, iterator __last);
 
@@ -616,7 +616,7 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase(pointer __p)
 	{
 		__erase(__right(__p));
 		pointer _Tmp = __left(__p);
-		__destroy(__p);
+		__destroy_node(__p);
 		__p = _Tmp;
 	}
 }
@@ -708,10 +708,18 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__right_rotate(pointer __node)
 template <typename _Ty2, typename _Compare, typename _Alloc2>
 void rb_tree<_Ty2, _Compare, _Alloc2>::__revalance(pointer __node)
 {
+	std::cout << _nil->__value_field << std::endl;
+	std::cout << std::boolalpha << _nil->__color << std::endl << std::endl;
+	std::cout << __node->__value_field << std::endl;
+	std::cout << std::boolalpha << __node->__color << std::endl << std::endl;
+	std::cout << __node->__parent->__value_field << std::endl;
+	std::cout << std::boolalpha << __node->__parent->__color << std::endl << std::endl;
 	while (__node->__parent->__color == __rb_tree_red)
 	{
 		pointer _grand = __gparent(__node);
 		pointer _uncle = __uncle(__node);
+		std::cout << _uncle->__value_field << std::endl;
+		std::cout << std::boolalpha << _uncle->__color << std::endl;
 		if (__parent(__node)== _grand->__left)
 		{
 			// parent, uncle : red
@@ -771,7 +779,7 @@ rb_tree<_Ty2, _Compare, _Alloc2>::__insert_node(pointer __root, const _Ty2& _dat
 	pointer parent = _nil;
 	pointer tail = (pointer&)(_nil->__parent);
 
-	while (tail != _nil)
+	while (tail != 0 && tail != _nil)
 	{
 		// parent : nil -> root, tail : root -> left or right.
 		parent = tail;
@@ -788,48 +796,105 @@ rb_tree<_Ty2, _Compare, _Alloc2>::__insert_node(pointer __root, const _Ty2& _dat
 	{
 		parent->__parent = tail;
 		tail->__color = __rb_tree_black;
+		tail->__parent = _nil;
 	}
 	else if (_compare(_data, parent->__value_field))
+	{
 		parent->__left = tail;
+		tail->__parent = parent;
+	}
 	else
+	{
 		parent->__right = tail;
+		tail->__parent = parent;
+	}
 	++this->_count;
 	__revalance(tail);
 	return ( typename ft::pair<typename rb_tree<_Ty2, _Compare, _Alloc2>::iterator, bool>(iterator(tail), true) );
 }
 
 
-template <typename _Ty2, typename _Compare, typename _Alloc2>
-void rb_tree<_Ty2, _Compare, _Alloc2>::erase(iterator __position)
-{
-	pointer __p = __position.base();
-	pointer _Tmp;
-	if (__left(__p) != _nil)
-	{
-		_Tmp = __maximum_node(__left(__p));
-		__destroy(&__p->__value_field);
-		__construct(&__p->__value_field, _Tmp->__value_field);
-		__destroy_node(_Tmp);
-	}
-	else
-	{
+// template <typename _Ty2, typename _Compare, typename _Alloc2>
+// void rb_tree<_Ty2, _Compare, _Alloc2>::erase(iterator __position)
+// {
+// 	pointer __p = __position.base();
+// 	pointer _Tmp;
+// 	if (__left(__p) != _nil)
+// 	{
+// 		_Tmp = __maximum_node(__left(__p));
+// 		__destroy(__p);
+// 		__construct(&__p->__value_field, _Tmp->__value_field);
+// 		__destroy_node(_Tmp);
+// 	}
+// 	else
+// 	{
 
-	}
-	if (__p == __p->__parent->__left)
+// 	}
+// 	if (__p == __p->__parent->__left)
+// 	{
+// 			_Tmp = __p->__right;
+// 			__p->__parent->__left = _Tmp;
+// 			__parent(_Tmp) = __p->__parent;
+// 			__destroy_node(__p);
+// 	}
+// 	else
+// 	{
+// 			_Tmp = __p->__right;
+// 			__p->__parent->__right = _Tmp;
+// 			__parent(_Tmp) = __p->__parent;
+// 			__destroy_node(__p);
+// 	}
+// 	__revalance(_Tmp);
+// }
+
+
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::preorder(pointer root, std::string *stringBuilder, std::string padding, const std::string &__pointer, const bool hasRightChild) const
+{
+	std::string* paddingBuilder;	// 이 loop에서 stringBuilder에 append할 문자열을 의미한다.
+	if (root == _nil) return;
+	else 
 	{
-			_Tmp = __p->__right;
-			__p->__parent->__left = _Tmp;
-			__parent(_Tmp) = __p->__parent;
-			__destroy_node(__p);
+		paddingBuilder = new std::string(padding);
+		stringBuilder->append("\n").append(padding).append(__pointer);
+		if (root->__color == __rb_tree_black) stringBuilder->append("B");
+		else stringBuilder->append("R");
+		stringBuilder->append(std::to_string(root->__value_field));
+
+		if (hasRightChild) paddingBuilder->append("│  ");
+		else paddingBuilder->append("   ");
 	}
-	else
-	{
-			_Tmp = __p->__right;
-			__p->__parent->__right = _Tmp;
-			__parent(_Tmp) = __p->__parent;
-			__destroy_node(__p);
+
+	// [재귀함수]
+	preorder(root->__left, stringBuilder, *paddingBuilder, "├──", root->__right != nullptr);
+	preorder(root->__right, stringBuilder, *paddingBuilder, "└──", false);
+
+	delete paddingBuilder;		// 메모리 누수를 막자.
+}
+
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+std::string rb_tree<_Ty2, _Compare, _Alloc2>::show_tree() const
+{
+	pointer root = _nil->__parent;
+	if (this->_count == 0) 
+	{	// [오류]: 비어있는 BST에 대한 'show'함수 호출은 오류상황이다.
+		std::cout << "[ERROR] Can't perform 'show' function on empty tree!" << std::endl;
+		return "";
 	}
-	__revalance(_Tmp);
+
+	std::string* str = new std::string();	// BST 전체를 preorder로 출력할 문자열 포인터를 생성한다.
+	if (root->__color == __rb_tree_black) str->append("B");
+	else str->append("R");
+	str->append(std::to_string(root->__value_field));		// 우선 문자열에 root 노드의 key를 넣어준다.
+
+	// [본격적인 재귀 함수 시작 부분] 
+	preorder(root->__left, str, "", "├──", root->__right != nullptr);
+	preorder(root->__right, str, "", "└──", false);
+
+	// 재귀함수가 끝나면 문자열에는 전체 BST의 출력문이 들어있게 된다.
+	std::string returnStr = *str;	// 문자열 포인터를 삭제해주기 위해 지역변수에 복사한다.
+	delete str;						// 문자열 포인터를 delete해서 메모리 누수를 막는다.
+	return returnStr;				// 지역변수를 넘겨주고 프로그램 종료시 컴파일러가 삭제하게 맡긴다.
 }
 
 _FT_END
