@@ -3,6 +3,7 @@
 #include "basic_macro.hpp"
 #include <algorithm>
 #include <cstring>
+#include <memory>
 
 _FT_BEGIN
 template <class InputIterator1, class InputIterator2>
@@ -69,27 +70,57 @@ void swap(value_type& a, value_type& b)
 template <class _input_iterator, class _forward_iterator>
 _forward_iterator uninitialized_copy(_input_iterator _first, _input_iterator _last, _forward_iterator _result)
 {
-	for (; _first != _last; ++_result, ++_first)
-		new (static_cast<void *>(&*_result))
-			typename ft::iterator_traits<_forward_iterator>::value_type(*_first);
+	typedef typename ft::iterator_traits<_forward_iterator>::value_type value_type;
+	_forward_iterator __s = _result;
+	try
+	{
+		for (; _first != _last; ++_result, ++_first)
+			new (static_cast<void *>(&*_result)) value_type(*_first);
+	}
+	catch(...)
+	{
+		for (; __s != _result; ++__s)
+			__s->~value_type();
+		throw ;
+	}
 	return (_result);
 }
 
 template <class _forward_iterator, class _Ty2>
 _forward_iterator uninitialized_fill(_forward_iterator _first, _forward_iterator _last, const _Ty2 &_val)
 {
-	for (; _first != _last; ++_first)
-		new (static_cast<void *>(&*_first))
-			typename ft::iterator_traits<_forward_iterator>::value_type(_val);
+	typedef typename ft::iterator_traits<_forward_iterator>::value_type value_type;
+	_forward_iterator __s = _first;
+	try
+	{
+		for (; _first != _last; ++_first)
+			new (static_cast<void *>(&*_first)) value_type(_val);
+	}
+	catch(...)
+	{
+		for (; __s != _first; ++__s)
+			__s->~value_type();
+			throw ;
+	}
 	return (_last);
 }
 
 template <class _forward_iterator, class _size, class _Ty2>
 _forward_iterator uninitialized_fill_n(_forward_iterator _first, _size __n, const _Ty2 &_val)
 {
-	for (; __n--; ++_first)
-		new (static_cast<void *>(&*_first))
-			typename ft::iterator_traits<_forward_iterator>::value_type(_val);
+	typedef typename ft::iterator_traits<_forward_iterator>::value_type value_type;
+	_forward_iterator __s = _first;
+	try
+	{
+		for (; __n--; ++_first)
+			new (static_cast<void *>(&*_first)) value_type(_val);
+	}
+	catch(...)
+	{
+		for (; __s != _first; ++__s)
+			__s->~value_type();
+			throw ;
+	}
 	return (_first);
 }
 
@@ -115,8 +146,8 @@ _outpur_iterator fill_n(_outpur_iterator _first, Size n, const T &_val)
 	return _first;
 }
 
-template <class _input_iterator, class _outpur_iterator>
-_outpur_iterator copy(_input_iterator _first, _input_iterator _last, _outpur_iterator result)
+template <class _input_iterator, class _output_iterator>
+_output_iterator copy(_input_iterator _first, _input_iterator _last, _output_iterator result)
 {
 	while (_first != _last)
 	{

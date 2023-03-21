@@ -1,6 +1,6 @@
 NAME	=	ft_containers
 CLANG	=	c++
-CFLAGS	=	-Wall -Wextra -Werror -std=c++98 -pedantic
+CFLAGS	=	-Wall -Wextra -Werror -std=c++98
 
 SRCS	= 	main.cpp
 

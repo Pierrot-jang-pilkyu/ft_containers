@@ -2,8 +2,10 @@
 #define ITERATOR_HPP
 #include "basic_macro.hpp"
 #include "iterator_traits.hpp"
+#include <memory>
 
 _FT_BEGIN
+
 template <typename _Category, typename _Ty, typename _Distance = std::ptrdiff_t, typename _Pointer = _Ty*, typename _Reference = _Ty&>
 struct iterator
 {
@@ -187,7 +189,7 @@ typename reverse_iterator<_Iter1>::difference_type operator-(const reverse_itera
 **	|----------------------------------------------------------------------------------------------------------------------------------------------|
 */
 
-template <typename _Iter, typename _Container>
+template <typename _Iter>
 class __normal_iterator :
 	public ft::iterator <	typename ft::iterator_traits<_Iter>::iterator_category,
 						typename ft::iterator_traits<_Iter>::value_type,
@@ -212,8 +214,8 @@ public:
 	explicit __normal_iterator (const iterator_type& _It) : current(_It) {}
 	// Allow iterator to const_iterator conversion
 	template <typename _Iter2>
-	__normal_iterator (const __normal_iterator<_Iter2, _Container>& _It) : current(_It.base()) {}
-	__normal_iterator &operator=(const __normal_iterator<_Iter, _Container>& _Right)
+	__normal_iterator (const __normal_iterator<_Iter2>& _It) : current(_It.base()) {}
+	__normal_iterator &operator=(const __normal_iterator<_Iter>& _Right)
 	{
 		this->current = _Right.current;
 		return (*this);
@@ -296,47 +298,47 @@ public:
 };
 
 // forward_iterator requirements
-template<typename _IterL, typename _IterR, typename _Container>
-inline bool operator==(const __normal_iterator<_IterL, _Container>& _Left, const __normal_iterator<_IterR, _Container>& _Right)
+template<typename _IterL, typename _IterR>
+inline bool operator==(const __normal_iterator<_IterL>& _Left, const __normal_iterator<_IterR>& _Right)
 {
 	return (_Left.base() == _Right.base());
 }
 
-template<typename _IterL, typename _IterR, typename _Container>
-inline bool operator!=(const __normal_iterator<_IterL, _Container>& _Left, const __normal_iterator<_IterR, _Container>& _Right)
+template<typename _IterL, typename _IterR>
+inline bool operator!=(const __normal_iterator<_IterL>& _Left, const __normal_iterator<_IterR>& _Right)
 {
 	return !(_Left == _Right);
 }
 
 // random_access_iterator requirements
-template<typename _IterL, typename _IterR, typename _Container>
-inline bool operator<(const __normal_iterator<_IterL, _Container>& _Left, const __normal_iterator<_IterR, _Container>& _Right)
+template<typename _IterL, typename _IterR>
+inline bool operator<(const __normal_iterator<_IterL>& _Left, const __normal_iterator<_IterR>& _Right)
 {
 	return (_Left.base() < _Right.base());
 }
 
-template<typename _IterL, typename _IterR, typename _Container>
-inline bool operator>(const __normal_iterator<_IterL, _Container>& _Left, const __normal_iterator<_IterR, _Container>& _Right)
+template<typename _IterL, typename _IterR>
+inline bool operator>(const __normal_iterator<_IterL>& _Left, const __normal_iterator<_IterR>& _Right)
 {
 	return (_Right < _Left);
 }
 
-template<typename _IterL, typename _IterR, typename _Container>
-inline bool operator<=(const __normal_iterator<_IterL, _Container>& _Left, const __normal_iterator<_IterR, _Container>& _Right)
+template<typename _IterL, typename _IterR>
+inline bool operator<=(const __normal_iterator<_IterL>& _Left, const __normal_iterator<_IterR>& _Right)
 {
 	return !(_Right < _Left);
 }
 
-template<typename _IterL, typename _IterR, typename _Container>
-inline bool operator>=(const __normal_iterator<_IterL, _Container>& _Left, const __normal_iterator<_IterR, _Container>& _Right)
+template<typename _IterL, typename _IterR>
+inline bool operator>=(const __normal_iterator<_IterL>& _Left, const __normal_iterator<_IterR>& _Right)
 {
 	return !(_Left < _Right);
 }
 
-template<typename _Iterator, typename _Container>
-inline __normal_iterator<_Iterator, _Container> operator+(typename __normal_iterator<_Iterator, _Container>::difference_type _n, const __normal_iterator<_Iterator, _Container>& _It)
+template<typename _Iterator>
+inline __normal_iterator<_Iterator> operator+(typename __normal_iterator<_Iterator>::difference_type _n, const __normal_iterator<_Iterator>& _It)
 {
-	return (__normal_iterator<_Iterator, _Container>(_It.base() + _n));
+	return (__normal_iterator<_Iterator>(_It.base() + _n));
 }
 
 template <typename _input_iterator>

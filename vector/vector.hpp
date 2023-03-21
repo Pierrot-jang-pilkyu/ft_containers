@@ -4,6 +4,7 @@
 #include "../etc/algorithm.hpp"
 #include "../etc/type_traits.hpp"
 #include <memory>
+#include <iterator>
 #include <stdexcept>
 
 _FT_BEGIN
@@ -25,8 +26,8 @@ public:
 	typedef std::size_t										size_type;
 
 	// Membertype - iterator
-	typedef __normal_iterator<pointer, vector_type>			iterator;
-	typedef __normal_iterator<const_pointer, vector_type>	const_iterator;
+	typedef __normal_iterator<pointer>						iterator;
+	typedef __normal_iterator<const_pointer>				const_iterator;
 	typedef reverse_iterator<const_iterator>				const_reverse_iterator;
 	typedef reverse_iterator<iterator>						reverse_iterator;
 
@@ -48,6 +49,13 @@ protected:
 			_data_allocator.construct(__p, _val);
 	}
 
+	void _deallocate(const _Ty* __p, size_type __n)
+	{
+		_Ty* _Tmp = const_cast<_Ty*>(__p);
+		if (_Tmp)
+			_data_allocator.deallocate(_Tmp, __n);
+	}
+
 	void _deallocate(pointer __p, size_type __n)
 	{
 		if (__p)
@@ -65,6 +73,29 @@ protected:
 	void _destroy(pointer _pos)
 	{
 		_data_allocator.destroy(_pos);
+	}
+
+	pointer __copy(const _Ty* _first, const _Ty* _last, _Ty* result) const
+	{
+		_Ty* _Tmp = const_cast<_Ty*>(_first);
+		while (_Tmp != _last)
+		{
+			*result = *_Tmp;
+			++result;
+			++_Tmp;
+		}
+		return (result);
+	}
+
+	pointer __copy(pointer _first, pointer _last, pointer result)
+	{
+		while (_first != _last)
+		{
+			*result = *_first;
+			++result;
+			++_first;
+		}
+		return (result);
 	}
 
 	vector(size_type __n, const allocator_type& __a)
@@ -85,10 +116,16 @@ protected:
 	pointer _allocate_and_copy(_forward_iterator _first, _forward_iterator _last, size_type __n);
 
 	template <typename _input_iterator>
+	void	__initailize(_input_iterator _first, _input_iterator _last);
+
+	template <typename _input_iterator>
 	void	__initailize(_input_iterator _first, _input_iterator _last, input_iterator_tag);
 
 	template <typename _forward_iterator>
 	void	__initailize(_forward_iterator _first, _forward_iterator _last, forward_iterator_tag);
+
+	template <typename _random_access_iterator>
+	void	__initailize(_random_access_iterator _first, _random_access_iterator _last, random_access_iterator_tag);
 
 	void	__assign(size_type __n, const _Ty& _val);
 
@@ -107,8 +144,14 @@ protected:
 	{ __insert(_pos, static_cast<size_type>(__n), static_cast<_Ty>(_val)); }
 
 	template <typename _input_iterator>
+	void __insert(_input_iterator _first, _input_iterator _last);
+
+	template <typename _input_iterator>
 	void __insert(iterator _pos, _input_iterator _first, _input_iterator _last, false_type)
 	{ __insert(_pos, _first, _last, typename iterator_traits<_input_iterator>::iterator_category()); }
+
+	// template <typename _input_iterator>
+	// void __insert(iterator _pos, _input_iterator _first, _input_iterator _last);
 
 	template <typename _input_iterator>
 	void __insert(iterator _pos, _input_iterator _first, _input_iterator _last, input_iterator_tag);
@@ -246,6 +289,14 @@ public:
 		_end_of_storage = _start + __v.size();
 	}
 
+	// template <class _input_iterator>
+	// vector (_input_iterator _first, _input_iterator _last, const allocator_type& _alloc = allocator_type(),
+	// 	typename std::enable_if<!std::is_integral<_input_iterator>::value >::type* = 0)
+	// {
+	// 	(void)_alloc;
+	// 	__initailize(_first, _last);
+	// }
+
 	// Cpp compiler is used to identify function's overloads using fourth parameter(enable_if and is_integral) - pjang's opinion.
 	template <class _input_iterator>
 	vector (_input_iterator _first, _input_iterator _last, const allocator_type& _alloc = allocator_type(),
@@ -318,6 +369,12 @@ public:
 		__insert(_pos, __n, _val);
 	}
 
+	// template <typename _input_iterator>
+	// void insert(iterator _pos, _input_iterator _first, _input_iterator _last)
+	// {
+	// 	__insert(_pos, _first, _last);
+	// }
+
 	template <typename _input_iterator>
 	void insert(iterator _pos, _input_iterator _first, _input_iterator _last)
 	{
@@ -336,7 +393,7 @@ public:
 	{
 		if (_pos + 1 != end())
 		{
-			ft::copy(_pos + 1, end(), _pos);
+			__copy((_pos + 1).base(), end().base(), _pos.base());
 		}
 		--_finish;
 		_destroy(_finish);
@@ -345,7 +402,7 @@ public:
 
 	iterator erase(iterator _first, iterator _last)
 	{
-		iterator __i(ft::copy(_last, end(), _first));
+		iterator __i(__copy(_last.base(), end().base(), _first.base()));
 		_destroy(__i.base(), end().base());
 		_finish = _finish - ft::distance(_first, _last);
 		return (_first);
@@ -420,19 +477,21 @@ vector<_Ty,_Alloc>::operator=(const vector<_Ty, _Alloc>& _val)
 			_destroy(_start, _finish);
 			_deallocate(_start, _end_of_storage - _start);
 			_start = _Tmp;
+			_finish = _start + _vlen;
 			_end_of_storage = _start + _vlen;
 		}
 		else if (size() >= _vlen)
 		{
-			iterator __i(ft::copy(_val.begin(), _val.end(), begin()));
-			_destroy(__i.base(), end().base());
+			iterator __i(__copy(_val.begin().base(), _val.end().base(), _start));
+			// _destroy(_start + _vlen, end().base());
+			_end_of_storage = _finish = _start + _vlen;
 		}
-		else // vlen > size()
+		else // _vlen > size()
 		{
-			ft::copy(_val.begin(), _val.begin() + size(), _start);
+			__copy(_val.begin().base(), _val.begin().base() + size(), _start);
 			ft::uninitialized_copy(_val.begin() + size(), _val.end(), _finish);
+			_end_of_storage = _finish = _start + _vlen;
 		}
-		_finish = _start + _vlen;
  	}
 	return (*this);
 }
@@ -443,44 +502,55 @@ typename vector<_Ty, _Alloc>::pointer
 vector<_Ty, _Alloc>::_allocate_and_copy(_forward_iterator _first, _forward_iterator _last, size_type __n)
 {
 	pointer __r = _allocate(__n);
-	if (0 <= __n && __n <= max_size())
+	try
 	{
-		try
-		{
-			ft::uninitialized_copy(_first, _last, __r);
-		}
-		catch (const std::bad_alloc &__b)
-		{
-			_deallocate(__r, __n);
-			std::cerr << __b.what() << '\n';
-		}
+		ft::uninitialized_copy(_first, _last, __r);
 	}
-	else
+	catch (...)
 	{
-		try
-		{
-			ft::uninitialized_copy(_first, _last, __r);
-		}
-		catch (const std::length_error &__l)
-		{
-			_deallocate(__r, __n);
-			std::cerr << __l.what() << '\n';
-		}
+		_deallocate(__r, __n);
 	}
 	return (__r);
 }
 
 template <typename _Ty, typename _Alloc>
 template <typename _input_iterator>
-void vector<_Ty, _Alloc>::__initailize(_input_iterator _first, _input_iterator _last, input_iterator_tag)
+void vector<_Ty, _Alloc>::__initailize(_input_iterator _first, _input_iterator _last)
 {
+	size_type __n = static_cast<size_t>(_last - _first);
+	_start = _allocate(__n);
+	_finish = _start;
+	_end_of_storage = _start + __n;
 	for (; _first != _last; ++_first)
 		push_back(*_first);
 }
 
 template <typename _Ty, typename _Alloc>
+template <typename _input_iterator>
+void vector<_Ty, _Alloc>::__initailize(_input_iterator _first, _input_iterator _last, input_iterator_tag)
+{
+	size_type __n = ft::distance(_first, _last);
+	_start = _allocate(__n);
+	_finish = _start;
+	_end_of_storage = _start + __n;
+	for (; _first != _last; ++_first)
+		push_back(*_first.base());
+}
+
+template <typename _Ty, typename _Alloc>
 template <typename _forward_iterator>
 void vector<_Ty, _Alloc>::__initailize(_forward_iterator _first, _forward_iterator _last, forward_iterator_tag)
+{
+	size_type __n = ft::distance(_first, _last);
+
+	_start = _allocate(__n);
+	_finish = ft::uninitialized_copy(_first, _last, _start);
+	_end_of_storage = _start + __n;
+}
+
+template <typename _Ty, typename _Alloc>
+template <typename _random_access_iterator>
+void vector<_Ty, _Alloc>::__initailize(_random_access_iterator _first, _random_access_iterator _last, random_access_iterator_tag)
 {
 	size_type __n = ft::distance(_first, _last);
 
@@ -512,9 +582,9 @@ template <typename _Ty, typename _Alloc>
 template <typename _input_iterator>
 void vector<_Ty, _Alloc>::__assign(_input_iterator _first, _input_iterator _last, input_iterator_tag)
 {
-	iterator _cur(begin());
+	_input_iterator _cur(begin());
 	for (; _first != _last && _cur != end(); ++_first, ++_cur)
-		*_cur == *_first;
+		*_cur = *_first;
 	if (_first == _last)
 		erase(_cur, end());
 	else
@@ -539,12 +609,12 @@ void vector<_Ty, _Alloc>::__assign(_forward_iterator _first, _forward_iterator _
 	{
 		_forward_iterator _mid = _first;
 		ft::advance(_mid, size());
-		ft::copy(_first, _mid, _start);
+		__copy(_first.base(), _mid.base(), _start);
 		_finish = ft::uninitialized_copy(_mid, _last, _finish);
 	}
 	else
 	{
-		iterator _new_finish(ft::copy(_first, _last, _start));
+		iterator _new_finish(__copy(_first.base(), _last.base(), _start));
 		_destroy(_new_finish.base(), end().base());
 		_finish = _new_finish.base();
 	}
@@ -575,11 +645,11 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, const _Ty &_val)
 			_new_finish = ft::uninitialized_copy(_pos, iterator(_finish), _new_finish);
 
 		}
-		catch(const std::exception& e)
+		catch(...)
 		{
 			_destroy(_new_start.base(), _new_finish.base());
 			_deallocate(_new_start.base(), _new_capa);
-			std::cerr << e.what() << '\n';
+			throw ;
 		}
 		// copy success
 		_destroy(_start, _finish);
@@ -629,11 +699,11 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, size_type __n, const _Ty &_val
 				_new_finish = ft::uninitialized_fill_n(_new_finish, __n, _val);
 				_new_finish = ft::uninitialized_copy(_pos, iterator(_finish), _new_finish);
 			}
-			catch(const std::exception& e)
+			catch(...)
 			{
 				_destroy(_new_start.base(), _new_finish.base());
 				_deallocate(_new_start.base(), _new_capa);
-				std::cerr << e.what() << '\n';
+				throw ;
 			}
 			// copy success
 			_destroy(_start, _finish);
@@ -649,10 +719,9 @@ template <typename _Ty, typename _Alloc>
 template <typename _input_iterator>
 void vector<_Ty, _Alloc>::__insert(iterator _pos, _input_iterator _first, _input_iterator _last, input_iterator_tag)
 {
-	iterator _Tmp(_first);
-	for(; _Tmp != _last; ++_Tmp)
+	for(; _first != _last; ++_first)
 	{
-		_pos = insert(_pos, *_Tmp);
+		_pos = insert(_pos, *_first);
 		++_pos;
 	}
 }
@@ -701,11 +770,11 @@ void vector<_Ty, _Alloc>::__insert(iterator _pos, _forward_iterator _first, _for
 				_new_finish = ft::uninitialized_copy(_first, _last, _new_finish);
 				_new_finish = ft::uninitialized_copy(_pos, iterator(_finish), _new_finish);
 			}
-			catch(const std::exception& e)
+			catch(...)
 			{
 				_destroy(_new_start.base(), _new_finish.base());
 				_deallocate(_new_start.base(), _new_capa);
-				std::cerr << e.what() << '\n';
+				throw ;
 			}
 			// copy success
 			_destroy(_start, _finish);
