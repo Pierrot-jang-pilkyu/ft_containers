@@ -301,19 +301,19 @@ protected:
 	ft::pair<iterator, bool> __insert_node(const _Ty& _val);
 	ft::pair<iterator, bool> __insert_node(pointer __root, const _Ty& _val);
 
-	iterator __get_change_node(pointer _cur)
+	pointer __get_change_node(pointer _cur)
 	{
 		if (_cur->__right != _nil)	// predecessor - 선임자
-			return (iterator(__maximum_node(_cur->__right)));
+			return (__maximum_node(_cur->__right));
 		else if (_cur->__left != _nil) // successor - 후임자
-			return (iterator(__minimum_node(_cur->__left)));
+			return (__minimum_node(_cur->__left));
 		else
-			return (iterator(_nil));
+			return (_nil);
 	}
 
 	void __erase_base(pointer __node);
 	void __erase_revalance(pointer _doubly_black, int _case, bool _left_right);
-	void __erase_get_case(pointer parent, int& _case, bool& _left_right);
+	void __erase_get_case(pointer _doubly_black, int& _case, bool& _left_right);
 	void __erase_case1(pointer _doubly_black, bool _left_right);
 	void __erase_case2(pointer _doubly_black, bool _left_right);
 	void __erase_case3(pointer _doubly_black, bool _left_right);
@@ -527,9 +527,9 @@ public:
 			insert(*__first);
 	}
 
-	// void erase(iterator __position);
-	// size_type erase(const key_type &__x);
-	// void erase(iterator __first, iterator __last);
+	void erase(iterator __position);
+	size_type erase(const key_type &_val);
+	void erase(iterator __first, iterator __last);
 
 	void clear()
 	{
@@ -950,13 +950,16 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_base(pointer __node)
 	int		_case = 0;
 	bool	_left_right;
 	pointer	parent = __node->__parent;
+	pointer change_node;
 
 	if (__node->__left == _nil && __node->__right == _nil)
 	{
 		if (__node->__color == __rb_tree_red)
 		{
-			parent->__left = _nil;
-			parent->__right = _nil;
+			if (__node == parent->__left)
+				parent->__left = _nil;
+			else if (__node == parent->__right)
+				parent->__right = _nil;
 			__destroy_node(__node);
 		}
 		else if (__node->__color == __rb_tree_black)
@@ -966,42 +969,54 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_base(pointer __node)
 				parent->__parent = 0;
 				__destroy_node(__node);
 			}
-			else if (parent->__color == __rb_tree_red)
+			pointer _Tmp_nil = __get_node();
+			_Tmp_nil->__color = __rb_tree_doubly_black;
+			_Tmp_nil->__left = 0;
+			_Tmp_nil->__right = 0;
+			_Tmp_nil->__parent = parent;
+			if (__node == parent->__left)
+				parent->__left = _Tmp_nil;
+			else if (__node == parent->__right)
+				parent->__right = _Tmp_nil;
+			__destroy_node(__node);
+			__erase_get_case(_Tmp_nil, _case, _left_right);
+			__erase_revalance(_Tmp_nil, _case, _left_right);
+			if (_Tmp_nil == _Tmp_nil->__parent->__left)
+				_Tmp_nil->__parent->__left = _nil;
+			else if (_Tmp_nil == _Tmp_nil->__parent->__right)
+				_Tmp_nil->__parent->__right = _nil;
+			__put_node(_Tmp_nil);
+		}
+	}
+	else if (__node->__left != _nil && __node->__right == _nil || __node->__left == _nil && __node->__right != _nil)
+	{
+		if (__node->__left != _nil)
+			change_node = __node->__left;
+		else if (__node->__right != _nil)
+			change_node = __node->__right;
+		if (__node == parent->__left)
+			parent->__left = change_node;
+		else if (__node == parent->__right)
+			parent->__right = change_node;
+		__destroy_node(__node);
+		if (__node->__color == __rb_tree_black)
+		{
+			if (change_node->__color == __rb_tree_red)	// red_n_black
+				change_node->__color == __rb_tree_black;
+			else if (change_node->__color == __rb_tree_black)
 			{
-				if (__node == parent->__left)
-				{
-					if (parent->__right != _nil)
-						parent->__right->__color == __rb_tree_red;
-					parent->__color == __rb_tree_black;
-					parent->__left = _nil;
-				}
-				else if (__node == parent->__right)
-				{
-					if (parent->__left != _nil)
-						parent->__left->__color == __rb_tree_red;
-					parent->__color == __rb_tree_black;
-					parent->__right = _nil;
-				}
-				__destroy_node(__node);
-			}
-			else if (parent->__color == __rb_tree_black)
-			{
-				if (__node == parent->__left)
-				{
-					parent->__left = _nil;
-					parent->__color = __rb_tree_doubly_black;
-				}
-				else if (__node == parent->__right)
-				{
-					parent->__right = _nil;
-					parent->__color = __rb_tree_doubly_black;
-				}
-				__destroy_node(__node);
-				__erase_get_case(parent, _case, _left_right);
+				change_node->__color == __rb_tree_doubly_black;
+				__erase_get_case(change_node, _case, _left_right);
+				__erase_revalance(change_node, _case, _left_right);
 			}
 		}
 	}
-
+	else // __node->__left != _nil && __node->__right != _nil
+	{
+		change_node = __get_change_node(__node); // change_node->__left == _nil || change_node->__right == _nil;
+		ft::swap(__node->__value_field, change_node->__value_field);
+		__erase_base(change_node);
+	}
 }
 
 template <typename _Ty2, typename _Compare, typename _Alloc2>
@@ -1028,28 +1043,28 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_revalance(pointer _doubly_black, 
 }
 
 template <typename _Ty2, typename _Compare, typename _Alloc2>
-void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_get_case(pointer parent, int& _case, bool& _left_right)
+void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_get_case(pointer _doubly_black, int& _case, bool& _left_right)
 {
-	pointer gparent = parent->__parent;
-	pointer uncle;
+	pointer parent = _doubly_black->__parent;
+	pointer brother;
 
-	if (parent == gparent->__left)
+	if (_doubly_black == parent->__left)
 	{
 		_left_right = LEFT;
-		uncle = gparent->__right;
+		brother = parent->__right;
 	}
-	else if (parent == gparent->__right)
+	else if (_doubly_black == parent->__right)
 	{
 		_left_right = RIGHT;
-		uncle = gparent->__left;
+		brother = parent->__left;
 	}
-	if (uncle->__color == __rb_tree_red)
+	if (brother->__color == __rb_tree_red)
 		_case = 1;
-	else if (uncle->__color == __rb_tree_black)
+	else if (brother->__color == __rb_tree_black)
 	{
-		if (uncle->__left->__color == __rb_tree_black && uncle->__right->__color == __rb_tree_black)
+		if (brother->__left->__color == __rb_tree_black && brother->__right->__color == __rb_tree_black)
 			_case = 2;
-		else if (uncle->__left->__color == __rb_tree_red && uncle->__right->__color = __rb_tree_black)
+		else if (brother->__left->__color == __rb_tree_red && brother->__right->__color = __rb_tree_black)
 			_case = 3;
 		else _case = 4;
 	}
@@ -1257,39 +1272,45 @@ rb_tree<_Ty2, _Compare, _Alloc2>::__insert_node(pointer __root, const _Ty2& _dat
 }
 
 
-// template <typename _Ty2, typename _Compare, typename _Alloc2>
-// void rb_tree<_Ty2, _Compare, _Alloc2>::erase(iterator __position)
-// {
-// 	pointer __p = __position.base();
-// 	pointer _Tmp;
-// 	if (__left(__p) != _nil)
-// 	{
-// 		_Tmp = __maximum_node(__left(__p));
-// 		__destroy(__p);
-// 		__construct(&__p->__value_field, _Tmp->__value_field);
-// 		__destroy_node(_Tmp);
-// 	}
-// 	else
-// 	{
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::erase(iterator __position)
+{
+	pointer __node = __position.base();
+	__erase_base(__node);
+}
 
-// 	}
-// 	if (__p == __p->__parent->__left)
-// 	{
-// 			_Tmp = __p->__right;
-// 			__p->__parent->__left = _Tmp;
-// 			__parent(_Tmp) = __p->__parent;
-// 			__destroy_node(__p);
-// 	}
-// 	else
-// 	{
-// 			_Tmp = __p->__right;
-// 			__p->__parent->__right = _Tmp;
-// 			__parent(_Tmp) = __p->__parent;
-// 			__destroy_node(__p);
-// 	}
-// 	__revalance(_Tmp);
-// }
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+typename rb_tree<_Ty2, _Compare, _Alloc2>::size_type
+rb_tree<_Ty2, _Compare, _Alloc2>::erase(const key_type &_val)
+{
+	ft::pair<iterator, iterator> __p = equal_range(_val);
+	size_type __n = ft::distance(__p.first, __p.second);
+	erase(__p.first, __p.second);
+	return (__n);
+}
 
+
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::erase(iterator __first, iterator __last)
+{
+	if (__first == begin() && __last == end())
+		clear();
+	else
+	{
+		while (__first != __last)
+		{
+			erase(__first);
+			__first++;
+		}
+	}
+}
+
+
+/*
+**	|-------------------------------------------------------------------------------------------------------------------------|
+**	|----------------------------------------------------------Tester---------------------------------------------------------|
+**	|-------------------------------------------------------------------------------------------------------------------------|
+*/
 
 template <typename _Ty2, typename _Compare, typename _Alloc2>
 void rb_tree<_Ty2, _Compare, _Alloc2>::preorder(pointer root, std::string *stringBuilder, std::string padding, const std::string &__pointer, const bool hasRightChild) const
