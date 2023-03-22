@@ -343,7 +343,7 @@ public:
 
 /*
 **	|-------------------------------------------------------------------------------------------------------------------------|
-**	|------------------------------------------------------Iterators----------------------------------------------------------|
+**	|------------------------------------------------------Accessors----------------------------------------------------------|
 **	|-------------------------------------------------------------------------------------------------------------------------|
 */
 
@@ -495,6 +495,7 @@ public:
 	~rb_tree()
 	{
 		clear();
+		__put_node(_nil);
 	}
 
 	rb_tree_type& operator=(const rb_tree_type& __t);
@@ -524,7 +525,7 @@ public:
 	void insert(_InputIterator __first, _InputIterator __last)
 	{
 		for (; __first != __last; ++__first)
-			insert(*__first);
+			insert((*__first).__value_field);
 	}
 
 	void erase(iterator __position);
@@ -549,15 +550,15 @@ public:
 **	|-------------------------------------------------------------------------------------------------------------------------|
 */
 
-	iterator find(const key_type &__x);
-	const_iterator find(const key_type &__x) const;
-	size_type count(const key_type &__x) const;
-	iterator lower_bound(const key_type &__x);
-	const_iterator lower_bound(const key_type &__x) const;
-	iterator upper_bound(const key_type &__x);
-	const_iterator upper_bound(const key_type &__x) const;
-	pair<iterator, iterator> equal_range(const key_type &__x);
-	pair<const_iterator, const_iterator> equal_range(const key_type &__x) const;
+	iterator find(const key_type &_val);
+	const_iterator find(const key_type &_val) const;
+	size_type count(const key_type &_val) const;
+	iterator lower_bound(const key_type &_val);
+	const_iterator lower_bound(const key_type &_val) const;
+	iterator upper_bound(const key_type &_val);
+	const_iterator upper_bound(const key_type &_val) const;
+	pair<iterator, iterator> equal_range(const key_type &_val);
+	pair<const_iterator, const_iterator> equal_range(const key_type &_val) const;
 };
 
 
@@ -761,7 +762,7 @@ rb_tree<_Ty2, _Compare, _Alloc2>::upper_bound(const key_type &_val)
 
 template <typename _Ty2, typename _Compare, typename _Alloc2>
 typename rb_tree<_Ty2, _Compare, _Alloc2>::const_iterator
-rb_tree<_Ty2, _Compare, _Alloc2>::upper_bound(const key_type &__x) const
+rb_tree<_Ty2, _Compare, _Alloc2>::upper_bound(const key_type &_val) const
 {
 	pointer _res_p = _nil;
 	pointer _Tmp = __root();
@@ -988,7 +989,7 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_base(pointer __node)
 			__put_node(_Tmp_nil);
 		}
 	}
-	else if (__node->__left != _nil && __node->__right == _nil || __node->__left == _nil && __node->__right != _nil)
+	else if ((__node->__left != _nil && __node->__right == _nil) || (__node->__left == _nil && __node->__right != _nil))
 	{
 		if (__node->__left != _nil)
 			change_node = __node->__left;
@@ -1002,10 +1003,10 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_base(pointer __node)
 		if (__node->__color == __rb_tree_black)
 		{
 			if (change_node->__color == __rb_tree_red)	// red_n_black
-				change_node->__color == __rb_tree_black;
+				change_node->__color = __rb_tree_black;
 			else if (change_node->__color == __rb_tree_black)
 			{
-				change_node->__color == __rb_tree_doubly_black;
+				change_node->__color = __rb_tree_doubly_black;
 				__erase_get_case(change_node, _case, _left_right);
 				__erase_revalance(change_node, _case, _left_right);
 			}
@@ -1046,7 +1047,7 @@ template <typename _Ty2, typename _Compare, typename _Alloc2>
 void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_get_case(pointer _doubly_black, int& _case, bool& _left_right)
 {
 	pointer parent = _doubly_black->__parent;
-	pointer brother;
+	pointer brother = 0;
 
 	if (_doubly_black == parent->__left)
 	{
@@ -1064,7 +1065,7 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_get_case(pointer _doubly_black, i
 	{
 		if (brother->__left->__color == __rb_tree_black && brother->__right->__color == __rb_tree_black)
 			_case = 2;
-		else if (brother->__left->__color == __rb_tree_red && brother->__right->__color = __rb_tree_black)
+		else if (brother->__left->__color == __rb_tree_red && brother->__right->__color == __rb_tree_black)
 			_case = 3;
 		else _case = 4;
 	}
@@ -1075,7 +1076,7 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_case1(pointer _doubly_black, bool
 {
 	int		_case = 0;
 	pointer	parent = _doubly_black->__parent;
-	pointer	brother;
+	pointer	brother = 0;
 	if (_left_right == LEFT)
 	{
 		brother = parent->__right;
@@ -1097,7 +1098,7 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_case2(pointer _doubly_black, bool
 {
 	int		_case = 0;
 	pointer	parent = _doubly_black->__parent;
-	pointer	brother;
+	pointer	brother = 0;
 	if (_left_right == LEFT)
 		brother = parent->__right;
 	else if (_left_right == RIGHT)
@@ -1106,7 +1107,7 @@ void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_case2(pointer _doubly_black, bool
 	brother->__color = __rb_tree_red;
 	if (parent->__color == __rb_tree_red)
 	{
-		parent->__color == __rb_tree_black;
+		parent->__color = __rb_tree_black;
 		return ;
 	}
 	parent->__color = __rb_tree_doubly_black;
@@ -1118,8 +1119,8 @@ template <typename _Ty2, typename _Compare, typename _Alloc2>
 void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_case3(pointer _doubly_black, bool _left_right)
 {
 	pointer parent = _doubly_black->__parent;
-	pointer brother;
-	pointer nephew;
+	pointer brother = 0;
+	pointer nephew = 0;
 	if (_left_right == LEFT)
 	{
 		brother = parent->__right;
@@ -1141,7 +1142,7 @@ template <typename _Ty2, typename _Compare, typename _Alloc2>
 void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_case4(pointer _doubly_black, bool _left_right)
 {
 	pointer parent = _doubly_black->__parent;
-	pointer brother;
+	pointer brother = 0;
 	if (_left_right == LEFT)
 	{
 		brother = parent->__right;
