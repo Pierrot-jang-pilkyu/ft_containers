@@ -21,6 +21,7 @@ struct pair
 	{
 		this->first = _Other.first;
 		this->second = _Other.second;
+		return (*this);
 	}
 };
 
@@ -62,12 +63,6 @@ inline bool operator>=(const pair<_T1, _T2>& _Left, const pair<_T1, _T2>& _Right
 
 template <typename _T1, typename _T2>
 pair<_T1, _T2> make_pair(_T1 _t1, _T2 _t2)
-{
-	return ( pair<_T1, _T2>(_t1, _t2) );
-}
-
-template <typename _T1, typename _T2>
-pair<_T1, _T2> make_pair(const _T1& _t1, const _T2& _t2)
 {
 	return ( pair<_T1, _T2>(_t1, _t2) );
 }

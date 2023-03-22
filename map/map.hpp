@@ -4,8 +4,8 @@
 #include "../etc/pair.hpp"
 #include "../etc/rb_tree.hpp"
 #include "../etc/iterator.hpp"
-#include "../etc/algorithm.hpp"
 #include "../etc/type_traits.hpp"
+#include "../etc/algorithm.hpp"
 #include "../etc/iterator_traits.hpp"
 #include "../etc/basic_macro.hpp"
 
@@ -36,7 +36,7 @@ public:
 	};
 
 private:
-	typedef ft::rb_tree<value_type, _Compare, _Alloc>	rb_tree_type;
+	typedef ft::rb_tree<value_type, ft::__key_of_value_pair<value_type, key_type>, _Compare>	rb_tree_type;
 
 	rb_tree_type _t;
 
@@ -132,7 +132,7 @@ public:
 	void insert(_input_iterator _first, _input_iterator _last) { _t.insert(_first, _last); }
 
 	void erase(iterator _pos) { _t.erase(_pos); }
-	size_type erase(cosnt key_type& __k) { return (_t.erase(__k)); }
+	size_type erase(const key_type& __k) { return (_t.erase(ft::pair<_Key, _Ty>(__k, _Ty()))); }
 	void erase(iterator _first, iterator _last) { _t.erase(_first, _last); }
 
 	void clear() { _t.clear(); }
@@ -143,30 +143,30 @@ public:
 **	|-------------------------------------------------------------------------------------------------------------------------|
 */
 
-	iterator find(const key_type& _val) { return _t.find(_val); }
-	const_iterator find(const key_type& _val) const { return _t.find(_val); }
+	iterator find(const key_type& _val) { return _t.find(ft::pair<_Key, _Ty>(_val, _Ty())); }
+	const_iterator find(const key_type& _val) const { return _t.find(ft::pair<_Key, _Ty>(_val, _Ty())); }
 	size_type count(const key_type& _val) const
 	{
-		return _t.find(_val) == _t.end() ? 0 : 1; 
+		return _t.find(ft::pair<_Key, _Ty>(_val, _Ty())) == _t.end() ? 0 : 1;
 	}
-	iterator lower_bound(const key_type& _val) {return _t.lower_bound(_val); }
+	iterator lower_bound(const key_type& _val) {return _t.lower_bound(ft::pair<_Key, _Ty>(_val, _Ty())); }
 	const_iterator lower_bound(const key_type& _val) const
 	{
-		return _t.lower_bound(_val); 
+		return _t.lower_bound(ft::pair<_Key, _Ty>(_val, _Ty()));
 	}
-	iterator upper_bound(const key_type& _val) {return _t.upper_bound(_val); }
+	iterator upper_bound(const key_type& _val) {return _t.upper_bound(ft::pair<_Key, _Ty>(_val, _Ty())); }
 	const_iterator upper_bound(const key_type& _val) const
 	{
-		return _t.upper_bound(_val); 
+		return _t.upper_bound(ft::pair<_Key, _Ty>(_val, _Ty()));
 	}
 
 	pair<iterator,iterator> equal_range(const key_type& _val)
 	{
-		return _t.equal_range(_val);
+		return _t.equal_range(ft::pair<_Key, _Ty>(_val, _Ty()));
 	}
 	pair<const_iterator,const_iterator> equal_range(const key_type& _val) const
 	{
-		return _t.equal_range(_val);
+		return _t.equal_range(ft::pair<_Key, _Ty>(_val, _Ty()));
 	}
 
 /*
@@ -179,6 +179,11 @@ public:
 	friend bool operator== (const map<_Key1, _Ty1, _Comp1, _Alloc1>&, const map<_Key1, _Ty1, _Comp1, _Alloc1>&);
 	template <typename _Key1, typename _Ty1, typename _Comp1, typename _Alloc1>
 	friend bool operator< (const map<_Key1, _Ty1, _Comp1, _Alloc1>&, const map<_Key1, _Ty1, _Comp1, _Alloc1>&);
+
+
+
+
+	std::string show_tree() const { return _t.show_tree(); }
 
 };
 

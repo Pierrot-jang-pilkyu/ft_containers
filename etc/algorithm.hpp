@@ -1,6 +1,7 @@
 #ifndef ALGORITHM_HPP
 #define ALGORITHM_HPP
 #include "basic_macro.hpp"
+#include "type_traits.hpp"
 #include <algorithm>
 #include <cstring>
 #include <memory>
@@ -165,5 +166,6 @@ _bidirectional_iterator2 copy_backward(_bidirectional_iterator1 _first, _bidirec
 		*(--result) = *(--_last);
 	return result;
 }
+
 _FT_END
 #endif

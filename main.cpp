@@ -12,8 +12,9 @@
 // #include <type_traits>
 #include <algorithm>
 #include <functional>
-#include "./etc/pair.hpp"
 #include "./etc/rb_tree.hpp"
+#include "./map/map.hpp"
+#include "./etc/pair.hpp"
 #include "./vector/vector.hpp"
 #include "./stack/stack.hpp"
 #include "./etc/iterator.hpp"
@@ -23,6 +24,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <list>
 
 #include <iomanip>
 
@@ -117,54 +119,96 @@
 
 int test()
 {
-	ft::rb_tree<int, std::less<int> > 			myTree;
-	ft::rb_tree<int, std::less<int> >::iterator	iter;
+	std::list<ft::pair<int, std::string> > ft_lst;
+	ft_lst.push_back(ft::make_pair<int, std::string>(2, "world"));
+	ft_lst.push_back(ft::make_pair<int, std::string>(1, "hello"));
+	ft_lst.push_back(ft::make_pair<int, std::string>(5, "hi"));
+	ft_lst.push_back(ft::make_pair<int, std::string>(10, "my"));
+	ft_lst.push_back(ft::make_pair<int, std::string>(23, "tester"));
+	ft_lst.push_back(ft::make_pair<int, std::string>(20, "is"));
+	ft_lst.push_back(ft::make_pair<int, std::string>(15, "name"));
+	ft_lst.push_back(ft::make_pair<int, std::string>(22, "map"));
+
+	ft::map<int, std::string> ft_m(ft_lst.begin(), ft_lst.end());
+
+	std::cout << ft_m.show_tree() << std::endl;
+
+	ft::map<int, std::string>::iterator iter= ft_m.begin();
+
+	std::cout << iter->second << std::endl;
+	std::cout << (++iter)->second << std::endl;
+	std::cout << (++iter)->second << std::endl;
+	std::cout << (++iter)->second << std::endl;
+	std::cout << (++iter)->second << std::endl;
+	std::cout << (++iter)->second << std::endl;
+	std::cout << (++iter)->second << std::endl;
+	std::cout << (++iter)->second << std::endl;
+
+	// ft::rb_tree<int, std::less<int> > myTree;
+
+	// myTree.insert(2);
+	// myTree.insert(1);
+	// myTree.insert(5);
 	// myTree.insert(10);
+	// myTree.insert(23);
+	// myTree.insert(20);
+	// myTree.insert(15);
+	// myTree.insert(22);
 
-	// std::cout << myTree.begin()->__value_field << std::endl;
-	// std::cout << myTree.size() << std::endl;
+	// ft::rb_tree<int, std::less<int> >::iterator iter = myTree.begin();
 
-	std::cout << "-------------------------------------" << std::endl;
-	std::cout << "Commands:" << std::endl;
-	std::cout << "   '+Key': Insert element" << std::endl;
-	std::cout << "      'Q': Quit the test program" << std::endl;
-	std::cout << "--------------------------------------" << std::endl;
-	std::cout << "※ In tree draw, '├──key' is left child, '└──key' is right child ※\n" << std::endl;
+	// std::cout << *iter << std::endl;
+	// std::cout << *(++iter) << std::endl;
+	// std::cout << *(++iter) << std::endl;
+	// std::cout << *(++iter) << std::endl;
+	// std::cout << *(++iter) << std::endl;
+	// std::cout << *(++iter) << std::endl;
+	// std::cout << *(++iter) << std::endl;
+	// std::cout << *(++iter) << std::endl;
 
-	std::string userStr;
+	// // std::cout << myTree.size() << std::endl;
+
+	// std::cout << "-------------------------------------" << std::endl;
+	// std::cout << "Commands:" << std::endl;
+	// std::cout << "   '+Key': Insert element" << std::endl;
+	// std::cout << "      'Q': Quit the test program" << std::endl;
+	// std::cout << "--------------------------------------" << std::endl;
+	// std::cout << "※ In tree draw, '├──key' is left child, '└──key' is right child ※\n" << std::endl;
+
+	// std::string userStr;
 	
 
-	while (true) 
-	{
-		std::cout << myTree.show_tree() << std::endl;		// 매 loop마다 트리를 출력하도록 설정한다.
+	// while (true) 
+	// {
+	// 	std::cout << myTree.show_tree() << std::endl;		// 매 loop마다 트리를 출력하도록 설정한다.
 
-		std::cout << "Command: ";
-		std::cin >> userStr;
+	// 	std::cout << "Command: ";
+	// 	std::cin >> userStr;
 
-		char userOption = userStr[0];		// 사용자 입력값의 첫 글자는 연산 option을 의미한다.
-		userStr.erase(0, 1);				// atoi 함수를 사용하기 위해 첫 글자를 삭제한다.
-		int userVar = std::atoi(userStr.c_str());	// 사용자 입력 문자열을 정수로 바꾼다.
-		// [오류]: 유효하지 않은 연산자일경우 오류이므로 다시 입력하게끔 유도한다.
-		if (userOption != '+' && userOption != '-' && userOption != 'Q' && userOption != 'q') 
-		{
-			std::cout << "[ERROR] Wrong command! Input command again please" << std::endl;
-			continue;
-		}
-		// 사용자가 입력한 옵션에 따라 대응하는 함수를 호출한다.
-		switch (userOption) 
-		{
-		case '+':
-			myTree.insert(userVar);
-			break;
-		case '-':
-			iter = myTree.find(userVar);
-			myTree.erase(iter);
-			break;
-		case 'Q': case 'q':
-			std::cout << "Quit program!" << std::endl;
-			return 0;
-		}
-	}
+	// 	char userOption = userStr[0];		// 사용자 입력값의 첫 글자는 연산 option을 의미한다.
+	// 	userStr.erase(0, 1);				// atoi 함수를 사용하기 위해 첫 글자를 삭제한다.
+	// 	int userVar = std::atoi(userStr.c_str());	// 사용자 입력 문자열을 정수로 바꾼다.
+	// 	// [오류]: 유효하지 않은 연산자일경우 오류이므로 다시 입력하게끔 유도한다.
+	// 	if (userOption != '+' && userOption != '-' && userOption != 'Q' && userOption != 'q') 
+	// 	{
+	// 		std::cout << "[ERROR] Wrong command! Input command again please" << std::endl;
+	// 		continue;
+	// 	}
+	// 	// 사용자가 입력한 옵션에 따라 대응하는 함수를 호출한다.
+	// 	switch (userOption) 
+	// 	{
+	// 	case '+':
+	// 		myTree.insert(userVar);
+	// 		break;
+	// 	case '-':
+	// 		iter = myTree.find(userVar);
+	// 		myTree.erase(iter);
+	// 		break;
+	// 	case 'Q': case 'q':
+	// 		std::cout << "Quit program!" << std::endl;
+	// 		return 0;
+	// 	}
+	// }
 
 	// A<int> a;
 	// // a.a = 20;

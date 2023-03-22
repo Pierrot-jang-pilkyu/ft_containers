@@ -45,5 +45,39 @@ struct enable_if<true, T>
 	typedef T type;
 };
 
+template <typename _Arg, typename _Result>
+struct __unary_function
+{
+    typedef _Arg    argument_type;
+    typedef _Result result_type;
+};
+
+template <typename _Ty>
+struct __key_of_value : public __unary_function<_Ty, _Ty>
+{
+	_Ty operator()(_Ty __a)
+	{
+		return ( __a );
+	}
+
+	_Ty operator()(const _Ty __a) const
+	{
+		return ( __a );
+	}
+};
+
+template <typename _Arg, typename _Result>
+struct __key_of_value_pair : public __unary_function<_Arg, _Result>
+{
+	_Result operator()(_Arg __a)
+	{
+		return ( (_Result)(__a.first) );
+	}
+
+	_Result operator()(const _Arg __a) const
+	{
+		return ( (_Result)(__a.first) );
+	}
+};
 _FT_END
 #endif

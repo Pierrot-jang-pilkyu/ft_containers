@@ -20,7 +20,7 @@ public:
 	// Othodox Canonical Form 
 	explicit stack(const _Container& _Cont = _Container()) : c(_Cont) {}
 	stack(const stack& _Other) : c(_Other.c) {}
-	stack& operator=(const stack& _Other) { *this->c = _Other.c; }
+	stack& operator=(const stack& _Other) { this->c = _Other.c; return (*this); }
 	~stack() {};
 
 	// Element Access

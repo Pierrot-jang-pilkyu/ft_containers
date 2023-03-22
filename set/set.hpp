@@ -28,13 +28,12 @@ class set
 {
 public:
 	typedef _Key					key_type;
-	typedef _Ty						mapped_type;
-	typedef ft::pair<_Key, _Ty>		value_type;
+	typedef _Key					value_type;
 	typedef _Compare				key_compare;
 	typedef _Compare				value_compare;
 
 private:
-	typedef ft::rb_tree<value_type, _Compare, _Alloc>	rb_tree_type;
+	typedef ft::rb_tree<value_type, _Compare>	rb_tree_type;
 
 	rb_tree_type _t;
 
@@ -121,7 +120,7 @@ public:
 	void insert(_input_iterator _first, _input_iterator _last) { _t.insert(_first, _last); }
 
 	void erase(iterator _pos) { _t.erase(_pos); }
-	size_type erase(cosnt key_type& __k) { return (_t.erase(__k)); }
+	size_type erase(const key_type& __k) { return (_t.erase(__k)); }
 	void erase(iterator _first, iterator _last) { _t.erase(_first, _last); }
 
 	void clear() { _t.clear(); }
