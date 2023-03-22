@@ -8,6 +8,9 @@
 #define _CFT		::
 #define _FT			::ft::
 
+#define LEFT		true
+#define RIGHT		false
+
 #include <stdio.h>
 #include <string>
 

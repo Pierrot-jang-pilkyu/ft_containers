@@ -11,9 +11,11 @@
 
 _FT_BEGIN
 
-typedef bool __rb_tree_color_type;
-const __rb_tree_color_type __rb_tree_red = false;
-const __rb_tree_color_type __rb_tree_black = true;
+typedef int __rb_tree_color_type;
+const __rb_tree_color_type __rb_tree_red = 0;
+const __rb_tree_color_type __rb_tree_black = 1;
+const __rb_tree_color_type __rb_tree_red_n_black = 2;
+const __rb_tree_color_type __rb_tree_doubly_black = 3;
 
 template <typename _Ty>
 struct __rb_tree_node
@@ -26,7 +28,6 @@ struct __rb_tree_node
 	typedef __rb_tree_color_type	__color_type;
 
 	__color_type					__color;
-	bool							__extra_black;
 	pointer							__parent;
 	pointer							__left;
 	pointer							__right;
@@ -310,11 +311,13 @@ protected:
 			return (iterator(_nil));
 	}
 
-	void __erase_revalance(pointer __node);
-	void __erase_case1(pointer __node);
-	void __erase_case2(pointer __node);
-	void __erase_case3(pointer __node);
-	void __erase_case4(pointer __node);
+	void __erase_base(pointer __node);
+	void __erase_revalance(pointer _doubly_black, int _case, bool _left_right);
+	void __erase_get_case(pointer parent, int& _case, bool& _left_right);
+	void __erase_case1(pointer _doubly_black, bool _left_right);
+	void __erase_case2(pointer _doubly_black, bool _left_right);
+	void __erase_case3(pointer _doubly_black, bool _left_right);
+	void __erase_case4(pointer _doubly_black, bool _left_right);
 
 public:
 	void preorder(pointer root, std::string* stringBuilder, std::string padding, const std::string& pointer, const bool hasRightChild) const;
@@ -941,9 +944,210 @@ rb_tree<_Ty2, _Compare, _Alloc2>::__copy(pointer __x, pointer __p)
 	return (_top);
 }
 
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_base(pointer __node)
+{
+	int		_case = 0;
+	bool	_left_right;
+	pointer	parent = __node->__parent;
+
+	if (__node->__left == _nil && __node->__right == _nil)
+	{
+		if (__node->__color == __rb_tree_red)
+		{
+			parent->__left = _nil;
+			parent->__right = _nil;
+			__destroy_node(__node);
+		}
+		else if (__node->__color == __rb_tree_black)
+		{
+			if (parent == _nil)
+			{
+				parent->__parent = 0;
+				__destroy_node(__node);
+			}
+			else if (parent->__color == __rb_tree_red)
+			{
+				if (__node == parent->__left)
+				{
+					if (parent->__right != _nil)
+						parent->__right->__color == __rb_tree_red;
+					parent->__color == __rb_tree_black;
+					parent->__left = _nil;
+				}
+				else if (__node == parent->__right)
+				{
+					if (parent->__left != _nil)
+						parent->__left->__color == __rb_tree_red;
+					parent->__color == __rb_tree_black;
+					parent->__right = _nil;
+				}
+				__destroy_node(__node);
+			}
+			else if (parent->__color == __rb_tree_black)
+			{
+				if (__node == parent->__left)
+				{
+					parent->__left = _nil;
+					parent->__color = __rb_tree_doubly_black;
+				}
+				else if (__node == parent->__right)
+				{
+					parent->__right = _nil;
+					parent->__color = __rb_tree_doubly_black;
+				}
+				__destroy_node(__node);
+				__erase_get_case(parent, _case, _left_right);
+			}
+		}
+	}
+
+}
+
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_revalance(pointer _doubly_black, int _case, bool _left_right)
+{
+	switch (_case)
+	{
+	case 1:
+		__erase_case1(_doubly_black, _left_right);
+		break;
+	case 2:
+		__erase_case2(_doubly_black, _left_right);
+		break;
+	case 3:
+		__erase_case3(_doubly_black, _left_right);
+		break;
+	case 4:
+		__erase_case4(_doubly_black, _left_right);
+		break;
+	default:
+		break;
+	}
+
+}
+
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_get_case(pointer parent, int& _case, bool& _left_right)
+{
+	pointer gparent = parent->__parent;
+	pointer uncle;
+
+	if (parent == gparent->__left)
+	{
+		_left_right = LEFT;
+		uncle = gparent->__right;
+	}
+	else if (parent == gparent->__right)
+	{
+		_left_right = RIGHT;
+		uncle = gparent->__left;
+	}
+	if (uncle->__color == __rb_tree_red)
+		_case = 1;
+	else if (uncle->__color == __rb_tree_black)
+	{
+		if (uncle->__left->__color == __rb_tree_black && uncle->__right->__color == __rb_tree_black)
+			_case = 2;
+		else if (uncle->__left->__color == __rb_tree_red && uncle->__right->__color = __rb_tree_black)
+			_case = 3;
+		else _case = 4;
+	}
+}
+
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_case1(pointer _doubly_black, bool _left_right)
+{
+	int		_case = 0;
+	pointer	parent = _doubly_black->__parent;
+	pointer	brother;
+	if (_left_right == LEFT)
+	{
+		brother = parent->__right;
+		ft::swap(parent->__color, brother->__color);
+		__left_rotate(parent);
+	}
+	else if (_left_right == RIGHT)
+	{
+		brother = parent->__left;
+		ft::swap(parent->__color, brother->__color);
+		__right_rotate(parent);
+	}
+	__erase_get_case(_doubly_black, _case, _left_right);
+	__erase_revalance(_doubly_black, _case, _left_right);
+}
+
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_case2(pointer _doubly_black, bool _left_right)
+{
+	int		_case = 0;
+	pointer	parent = _doubly_black->__parent;
+	pointer	brother;
+	if (_left_right == LEFT)
+		brother = parent->__right;
+	else if (_left_right == RIGHT)
+		brother = parent->__left;
+	_doubly_black->__color = __rb_tree_black;
+	brother->__color = __rb_tree_red;
+	if (parent->__color == __rb_tree_red)
+	{
+		parent->__color == __rb_tree_black;
+		return ;
+	}
+	parent->__color = __rb_tree_doubly_black;
+	__erase_get_case(parent, _case, _left_right);
+	__erase_revalance(parent, _case, _left_right);
+}
+
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_case3(pointer _doubly_black, bool _left_right)
+{
+	pointer parent = _doubly_black->__parent;
+	pointer brother;
+	pointer nephew;
+	if (_left_right == LEFT)
+	{
+		brother = parent->__right;
+		nephew = parent->__left;
+		ft::swap(brother->__color, nephew->__color);
+		__right_rotate(brother);
+	}
+	else if (_left_right == RIGHT)
+	{
+		brother = parent->__left;
+		nephew = parent->__right;
+		ft::swap(brother->__color, nephew->__color);
+		__left_rotate(brother);
+	}
+	__erase_case4(_doubly_black, _left_right);
+}
+
+template <typename _Ty2, typename _Compare, typename _Alloc2>
+void rb_tree<_Ty2, _Compare, _Alloc2>::__erase_case4(pointer _doubly_black, bool _left_right)
+{
+	pointer parent = _doubly_black->__parent;
+	pointer brother;
+	if (_left_right == LEFT)
+	{
+		brother = parent->__right;
+		brother->__color = parent->__color;
+		brother->__right->__color = __rb_tree_black;
+		parent->__color = __rb_tree_black;
+		__left_rotate(parent);
+	}
+	else if (_left_right == RIGHT)
+	{
+		brother = parent->__left;
+		brother->__color = parent->__color;
+		brother->__left->__color = __rb_tree_black;
+		parent->__color = __rb_tree_black;
+		__right_rotate(parent);
+	}
+}
+
 /*
 **	|-------------------------------------------------------------------------------------------------------------------------|
-**	|---------------------------------------------------RB_Tree_Methods-------------------------------------------------------|
+**	|-------------------------------------------------------Modifiers---------------------------------------------------------|
 **	|-------------------------------------------------------------------------------------------------------------------------|
 */
 
