@@ -62,10 +62,9 @@ bool lexicographical_compare(InputIt1 first1, InputIt1 last1, InputIt2 first2, I
 template <typename value_type>
 void swap(value_type& a, value_type& b)
 {
-	value_type tmp;
-	std::memmove(static_cast<void *>(&tmp), static_cast<void *>(&a), sizeof(value_type));
-	std::memmove(static_cast<void *>(&a), static_cast<void *>(&b), sizeof(value_type));
-	std::memmove(static_cast<void *>(&b), static_cast<void *>(&tmp), sizeof(value_type));
+	value_type tmp(a);
+	a = b;
+	b = tmp;
 }
 
 template <class _input_iterator, class _forward_iterator>

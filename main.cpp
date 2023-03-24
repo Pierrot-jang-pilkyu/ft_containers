@@ -114,7 +114,7 @@
 //   bool operator() (const T& x, const T& y) const {return x<y;}
 // };
 
-// #define SHOW(...) \
+// #define SHOW(...) 
 //     std::cout << std::setw(29) << #__VA_ARGS__ << " == " << __VA_ARGS__ << '\n'
 
 int test()
@@ -130,19 +130,52 @@ int test()
 	ft_lst.push_back(ft::make_pair<int, std::string>(22, "map"));
 
 	ft::map<int, std::string> ft_m(ft_lst.begin(), ft_lst.end());
+	ft::map<int, std::string> ft_m2(ft_m);
+	ft::map<int, std::string> ft_m3;
+
+	std::map<int, std::string> std_m;
+
+	std::map<int, std::string>::const_iterator std_it = std_m.begin();
+	ft::map<int, std::string>::const_iterator it = ft_m3.begin();
+
+	printf("%p\n", std_it);
+	std::cout << std::boolalpha << (std_it == std_m.end()) << std::endl;
+	printf("%p\n", it);
+	std::cout << std::boolalpha << (it == ft_m3.end()) << std::endl;
+
+	ft::map<int, std::string>::const_iterator its = ft_m.begin();
+	ft::map<int, std::string>::const_iterator ite = ft_m.end();
+
+	// std::cout << ft_m2.show_tree() << std::endl;
+	std::cout << std::boolalpha << ft_m2.empty() << std::endl;
+	ft_m2.erase(2);
+	ft_m2.erase(1);
+	ft_m2.erase(5);
+	ft_m2.erase(10);
+	ft_m2.erase(23);
+	ft_m2.erase(20);
+	ft_m2.erase(15);
+	ft_m2.erase(22);
+	std::cout << ft_m2.size() << std::endl;
+	std::cout << std::boolalpha << ft_m2.empty() << std::endl;
+	// std::cout << ft_m2.empty() << std::endl;
+
+	// printf("%p\n", &iter);
+	// std::cout << iter->first << " " << iter->second << std::endl;
 
 	std::cout << ft_m.show_tree() << std::endl;
+	std::cout << ft_m2.show_tree() << std::endl;
 
-	ft::map<int, std::string>::iterator iter= ft_m.begin();
+	// ft::map<int, std::string>::iterator iter= ft_m2.begin();
 
-	std::cout << iter->second << std::endl;
-	std::cout << (++iter)->second << std::endl;
-	std::cout << (++iter)->second << std::endl;
-	std::cout << (++iter)->second << std::endl;
-	std::cout << (++iter)->second << std::endl;
-	std::cout << (++iter)->second << std::endl;
-	std::cout << (++iter)->second << std::endl;
-	std::cout << (++iter)->second << std::endl;
+	// std::cout << iter->second << std::endl;
+	// std::cout << (++iter)->second << std::endl;
+	// std::cout << (++iter)->second << std::endl;
+	// std::cout << (++iter)->second << std::endl;
+	// std::cout << (++iter)->second << std::endl;
+	// std::cout << (++iter)->second << std::endl;
+	// std::cout << (++iter)->second << std::endl;
+	// std::cout << (++iter)->second << std::endl;
 
 	// ft::rb_tree<int, std::less<int> > myTree;
 

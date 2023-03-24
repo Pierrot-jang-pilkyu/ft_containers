@@ -21,8 +21,8 @@ template <>          struct __libcpp_is_integral<signed char>        : public tr
 template <>          struct __libcpp_is_integral<unsigned char>      : public true_type {};
 template <>          struct __libcpp_is_integral<wchar_t>            : public true_type {};
 
-template <>          struct __libcpp_is_integral<char16_t>           : public true_type {};
-template <>          struct __libcpp_is_integral<char32_t>           : public true_type {};
+// template <>          struct __libcpp_is_integral<char16_t>           : public true_type {};
+// template <>          struct __libcpp_is_integral<char32_t>           : public true_type {};
 
 template <>          struct __libcpp_is_integral<short>              : public true_type {};
 template <>          struct __libcpp_is_integral<unsigned short>     : public true_type {};

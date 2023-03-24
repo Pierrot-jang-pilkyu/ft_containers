@@ -269,7 +269,10 @@ protected:
 		return ( __root );
 	}
 
-	pointer& __root() const { return ( (pointer&)_nil->__parent ); }
+	pointer& __root() const
+	{
+		return ( (pointer&)_nil->__parent );
+	}
 
 	pointer& __parent(pointer __node) { return ( (pointer&)__node->__parent ); }
 	pointer& __gparent(pointer __node)
@@ -314,10 +317,10 @@ protected:
 
 	pointer __get_change_node(pointer _cur)
 	{
-		if (_cur->__right != _nil)	// predecessor - 선임자
-			return (__maximum_node(_cur->__right));
-		else if (_cur->__left != _nil) // successor - 후임자
-			return (__minimum_node(_cur->__left));
+		if (_cur->__left != _nil)	// predecessor - 선임자
+			return (__maximum_node(_cur->__left));
+		else if (_cur->__right != _nil) // successor - 후임자
+			return (__minimum_node(_cur->__right));
 		else
 			return (_nil);
 	}
@@ -371,8 +374,18 @@ public:
 
 	compare_type key_comp() const { return ( _compare ); }
 
-	iterator begin() { return ( iterator(__minimum_node(_nil->__parent)) ); }
-	const_iterator begin() const { return ( const_iterator(__minimum_node(_nil->__parent)) ); }
+	iterator begin()
+	{
+		if (_nil->__parent == 0)
+			return ( iterator(_nil) );
+		return ( iterator(__minimum_node(_nil->__parent)) );
+	}
+	const_iterator begin() const
+	{
+		if (_nil->__parent == 0)
+			return ( const_iterator(_nil) );
+		return ( const_iterator(__minimum_node(_nil->__parent)) );
+	}
 	iterator end() { return ( iterator(_nil) ); }
 	const_iterator end() const { return ( const_iterator(_nil) ); }
 
@@ -447,6 +460,18 @@ protected:
 		(pointer&)_nil->__right = _nil;
 	}
 
+	pointer __get_nil(pointer __node)
+	{
+		pointer _Tmp(__node);
+		if (_Tmp->__parent == 0)
+			return (__node);
+		while (_Tmp != _Tmp->__parent->__parent)
+			_Tmp = _Tmp->__parent;
+		if (_Tmp == _Tmp->__parent->__parent)
+			return (_Tmp->__parent);
+		return ((pointer) 0);
+	}
+
 	pointer __copy(pointer _first, pointer _last);
 	void	__erase(pointer __p);
 
@@ -503,6 +528,7 @@ public:
 		}
 		else
 		{
+			__initialize();
 			_data_allocator = __t.get_allocater();
 			__color(_nil) = __rb_tree_black;
 			__root() = __copy(__t.__root(), _nil);
@@ -736,9 +762,11 @@ rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::lower_bound(const key_type &_val)
 			_Tmp = _Tmp->__left;
 		}
 		else
+		{
 			_Tmp = _Tmp->__right;
+		}
 	}
-	return (iterator(_Tmp));
+	return (iterator(_res_p));
 }
 
 template <typename _Ty2, typename _KeyOfValue, typename _Compare, typename _Alloc2>
@@ -758,7 +786,7 @@ rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::lower_bound(const key_type &_val)
 		else
 			_Tmp = _Tmp->__right;
 	}
-	return (const_iterator(_Tmp));
+	return (const_iterator(_res_p));
 }
 
 template <typename _Ty2, typename _KeyOfValue, typename _Compare, typename _Alloc2>
@@ -778,7 +806,7 @@ rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::upper_bound(const key_type &_val)
 		else
 			_Tmp = _Tmp->__right;
 	}
-	return (iterator(_Tmp));
+	return (iterator(_res_p));
 }
 
 template <typename _Ty2, typename _KeyOfValue, typename _Compare, typename _Alloc2>
@@ -798,7 +826,7 @@ rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::upper_bound(const key_type &_val)
 		else
 			_Tmp = _Tmp->__right;
 	}
-	return (const_iterator(_Tmp));
+	return (const_iterator(_res_p));
 }
 
 template <typename _Ty2, typename _KeyOfValue, typename _Compare, typename _Alloc2>
@@ -938,25 +966,31 @@ rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::__copy(pointer __x, pointer __p)
 	if (__x == 0 || __p == 0)
 		return ( pointer(__get_node()) );
 	pointer _top = __clone_node(__x);
+	pointer _x_nil = __get_nil(__x);
 	__parent(_top) = __p;
 
 	try
 	{
-		if (__x->__right)
+		if (__x->__right != _x_nil)
 			__right(_top) = __copy(__right(__x), _top);
+		else
+			__right(_top) = _nil;
 		__p = _top;
 		__x = __left(__x);
 
-		while (__x != _nil)
+		while (__x != _x_nil)
 		{
 			pointer _Tmp = __clone_node(__x);
 			__left(__p) = _Tmp;
 			__parent(_Tmp) = __p;
-			if (__x->__right)
-				_Tmp->__right = __copy(__left(__x), _Tmp);
+			if (__x->__right != _x_nil)
+				_Tmp->__right = __copy(__right(__x), _Tmp);
+			else
+				_Tmp->__right = _nil;
 			__p = _Tmp;
 			__x = __left(__x);
 		}
+		__left(__p) = _nil;
 	}
 	catch(...)
 	{
@@ -1020,7 +1054,9 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::__erase_base(pointer __node)
 			parent->__left = change_node;
 		else if (__node == parent->__right)
 			parent->__right = change_node;
-		__destroy_node(__node);
+		else if (__node->__parent == _nil)
+			_nil->__parent = change_node;
+		change_node->__parent = parent;
 		if (__node->__color == __rb_tree_black)
 		{
 			if (change_node->__color == __rb_tree_red)	// red_n_black
@@ -1032,6 +1068,7 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::__erase_base(pointer __node)
 				__erase_revalance(change_node, _case, _left_right);
 			}
 		}
+		__destroy_node(__node);
 	}
 	else // __node->__left != _nil && __node->__right != _nil
 	{
@@ -1126,7 +1163,7 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::__erase_case2(pointer _doubl
 		brother = parent->__left;
 	_doubly_black->__color = __rb_tree_black;
 	brother->__color = __rb_tree_red;
-	if (parent->__color == __rb_tree_red)
+	if (parent->__color == __rb_tree_red || parent->__parent == _nil)
 	{
 		parent->__color = __rb_tree_black;
 		return ;
@@ -1299,6 +1336,7 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::erase(iterator __position)
 {
 	pointer __node = __position.base();
 	__erase_base(__node);
+	_count--;
 }
 
 template <typename _Ty2, typename _KeyOfValue, typename _Compare, typename _Alloc2>
@@ -1319,10 +1357,16 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::erase(iterator __first, iter
 		clear();
 	else
 	{
-		while (__first != __last)
+		rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2> _Tmp;
+		_Tmp.insert(begin(), end());
+		iterator _Tmp_first = _Tmp.find(*__first);
+		iterator _Tmp_last = __last.base() == _nil ? _Tmp.end() : _Tmp.find(*__last);
+		iterator _del_one;
+		while (_Tmp_first != _Tmp_last)
 		{
-			erase(__first);
-			__first++;
+			_del_one = find(*_Tmp_first);
+			erase(_del_one);
+			_Tmp_first++;
 		}
 	}
 }
@@ -1352,7 +1396,7 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::preorder(pointer root, std::
 	}
 
 	// [재귀함수]
-	preorder(root->__left, stringBuilder, *paddingBuilder, "├──", root->__right != nullptr);
+	preorder(root->__left, stringBuilder, *paddingBuilder, "├──", root->__right != NULL);
 	preorder(root->__right, stringBuilder, *paddingBuilder, "└──", false);
 
 	delete paddingBuilder;		// 메모리 누수를 막자.
@@ -1374,7 +1418,7 @@ std::string rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::show_tree() const
 	str->append(" " + std::to_string(root->__value_field.first) + " " + root->__value_field.second);		// 우선 문자열에 root 노드의 key를 넣어준다.
 
 	// [본격적인 재귀 함수 시작 부분] 
-	preorder(root->__left, str, "", "├──", root->__right != nullptr);
+	preorder(root->__left, str, "", "├──", root->__right != NULL);
 	preorder(root->__right, str, "", "└──", false);
 
 	// 재귀함수가 끝나면 문자열에는 전체 BST의 출력문이 들어있게 된다.
