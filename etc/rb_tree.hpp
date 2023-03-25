@@ -1073,7 +1073,8 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::__erase_base(pointer __node)
 	else // __node->__left != _nil && __node->__right != _nil
 	{
 		change_node = __get_change_node(__node); // change_node->__left == _nil || change_node->__right == _nil;
-		ft::swap(__node->__value_field, change_node->__value_field);
+		__destroy(__node);
+		__construct(&__node->__value_field, change_node->__value_field);
 		__erase_base(change_node);
 	}
 }
