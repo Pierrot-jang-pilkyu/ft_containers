@@ -33,7 +33,7 @@ public:
 	typedef _Compare				value_compare;
 
 private:
-	typedef ft::rb_tree<value_type, __key_of_value<value_type>, _Compare>	rb_tree_type;
+	typedef ft::rb_tree<value_type, __key_of_value<value_type>, _Compare, _Alloc>	rb_tree_type;
 
 	rb_tree_type _t;
 

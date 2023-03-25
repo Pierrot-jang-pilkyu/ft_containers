@@ -4,15 +4,23 @@
 
 _FT_BEGIN
 
-struct true_type
+template <typename _Ty, _Ty _v>
+struct integral_constant
 {
-	static const bool value = true;
+	typedef _Ty		value_type;
+	static const _Ty value = _v;
+
+	operator value_type() const
+	{
+		return ( value );
+	}
 };
 
-struct false_type
-{
-	static const bool value = false;
-};
+#define _INTEGRAL_CONSTANT(_b)	integral_constant<bool, (_b)>
+
+typedef _INTEGRAL_CONSTANT(true) true_type;
+typedef _INTEGRAL_CONSTANT(false) false_type;
+
 
 template <class _Ty> struct __libcpp_is_integral                     : public false_type {};
 template <>          struct __libcpp_is_integral<bool>               : public true_type {};
@@ -21,8 +29,8 @@ template <>          struct __libcpp_is_integral<signed char>        : public tr
 template <>          struct __libcpp_is_integral<unsigned char>      : public true_type {};
 template <>          struct __libcpp_is_integral<wchar_t>            : public true_type {};
 
-// template <>          struct __libcpp_is_integral<char16_t>           : public true_type {};
-// template <>          struct __libcpp_is_integral<char32_t>           : public true_type {};
+template <>          struct __libcpp_is_integral<char16_t>           : public true_type {};
+template <>          struct __libcpp_is_integral<char32_t>           : public true_type {};
 
 template <>          struct __libcpp_is_integral<short>              : public true_type {};
 template <>          struct __libcpp_is_integral<unsigned short>     : public true_type {};
@@ -30,8 +38,8 @@ template <>          struct __libcpp_is_integral<int>                : public tr
 template <>          struct __libcpp_is_integral<unsigned int>       : public true_type {};
 template <>          struct __libcpp_is_integral<long>               : public true_type {};
 template <>          struct __libcpp_is_integral<unsigned long>      : public true_type {};
-// template <>          struct is_integral<long long>          : public true_type {};
-// template <>          struct is_integral<unsigned long long> : public true_type {};
+template <>          struct __libcpp_is_integral<long long>          : public true_type {};
+template <>          struct __libcpp_is_integral<unsigned long long> : public true_type {};
 
 template<typename _Ty>
 struct is_integral : public __libcpp_is_integral<typename std::remove_cv<_Ty>::type > {};

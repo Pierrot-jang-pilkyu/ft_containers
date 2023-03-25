@@ -40,7 +40,7 @@ inline bool operator!=(const pair<_T1, _T2>& _Left, const pair<_T1, _T2>& _Right
 template <typename _T1, typename _T2>
 inline bool operator<(const pair<_T1, _T2>& _Left, const pair<_T1, _T2>& _Right)
 {
-	return ( (_Left.first < _Right.first) || ( !(_Left.first < _Right.first) && (_Left.second < _Right.second)) );
+	return ( (_Left.first < _Right.first) || ( !(_Right.first < _Left.first) && (_Left.second < _Right.second)) );
 }
 
 template <typename _T1, typename _T2>

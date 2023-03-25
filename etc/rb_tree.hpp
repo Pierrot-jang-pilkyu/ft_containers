@@ -26,12 +26,12 @@ struct __rb_tree_node
 	typedef __rb_tree_node<_Ty>&		reference;
 	typedef __rb_tree_color_type		__color_type;
 
+	_Ty								__value_field;
 	__color_type					__color;
 	pointer							__parent;
 	pointer							__left;
 	pointer							__right;
 
-	_Ty		__value_field;
 
 	__rb_tree_node()
 	{
@@ -41,9 +41,10 @@ struct __rb_tree_node
 		__left = 0;
 		__right = 0;
 	}
-	__rb_tree_node(const _Ty& _val) : __value_field(_val), __color(__rb_tree_red), __parent(0), __left(0), __right(0) {}
+	__rb_tree_node(const _Ty& _val) : __value_field(_Ty(_val)), __color(__rb_tree_red), __parent(0), __left(0), __right(0) {}
 	__rb_tree_node(const __rb_tree_node& __n)
 	: __value_field(_Ty(__n.__value_field)), __color(__n.__color), __parent(__n.__parent), __left(__n.__left), __right(__n.__right) {}
+	~__rb_tree_node() {}
 
 	__rb_tree_node &operator=(const __rb_tree_node& _Right)
 	{
@@ -214,7 +215,7 @@ inline bool operator!=(const __rb_tree_iterator<_IterL, _Ty>& _Left, const __rb_
 	return ( _Left.base() != _Right.base() );
 }
 
-template <typename _Ty, typename _KeyOfValue = ft::__key_of_value<_Ty>, typename _Compare = std::less<_Ty>, typename _Alloc = std::allocator<__rb_tree_node<_Ty> > >
+template <typename _Ty, typename _KeyOfValue = ft::__key_of_value<_Ty>, typename _Compare = std::less<_Ty>, typename _Alloc = std::allocator<_Ty> >
 class rb_tree
 {
 private:
@@ -226,6 +227,7 @@ public:
 	typedef __rb_tree_node<_Ty>								value_type;
 	typedef _Compare										compare_type;
 	typedef _Alloc											allocator_type;
+	typedef std::allocator<value_type>						value_allocator_type;
 	typedef value_type*										pointer;
 	typedef const value_type*								const_pointer;
 	typedef value_type&										reference;
@@ -241,11 +243,12 @@ public:
 	typedef reverse_iterator<iterator>						reverse_iterator;
 
 protected:
-	allocator_type		_data_allocator;
-	_Compare			_compare;
-	_KeyOfValue			_key_of_value;
-	size_type			_count;
-	pointer				_nil;
+	allocator_type					_data_allocator;
+	value_allocator_type			_value_allocator;
+	_Compare						_compare;
+	_KeyOfValue						_key_of_value;
+	size_type						_count;
+	pointer							_nil;
 
 	pointer __minimum_node(pointer __root)
 	{
@@ -397,18 +400,18 @@ public:
 protected:
 	pointer __get_node()
 	{
-		return ( _data_allocator.allocate(1) );
+		return ( _value_allocator.allocate(1) );
 	}
 
 	void	__put_node(pointer __p)
 	{
-		_data_allocator.deallocate(__p, 1);
+		_value_allocator.deallocate(__p, 1);
 	}
 
 	void __construct(_Ty* __p, const _Ty& _val)
 	{
-		if (__p)
-			new ((void*)__p) _Ty(_val);
+		// new ((void*)__p) _Ty(_val);
+		allocator_type().template construct<_Ty>(__p, _val);
 	}
 
 	void __destroy(pointer _pos)
@@ -1024,6 +1027,7 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::__erase_base(pointer __node)
 			{
 				parent->__parent = 0;
 				__destroy_node(__node);
+				return ;
 			}
 			pointer _Tmp_nil = __get_node();
 			_Tmp_nil->__color = __rb_tree_doubly_black;
@@ -1344,10 +1348,11 @@ template <typename _Ty2, typename _KeyOfValue, typename _Compare, typename _Allo
 typename rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::size_type
 rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::erase(const key_type &_val)
 {
-	ft::pair<iterator, iterator> __p = equal_range(_val);
-	size_type __n = __distance(__p.first, __p.second);
-	erase(__p.first, __p.second);
-	return (__n);
+	iterator __i = find(_val);
+	if (__i == end())
+		return (0);
+	erase(__i);
+	return (1);
 }
 
 

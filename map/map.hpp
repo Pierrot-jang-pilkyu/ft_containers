@@ -13,7 +13,7 @@
 #include <functional>
 
 _FT_BEGIN
-template <typename _Key, typename _Ty, typename _Compare = std::less<_Key>, typename _Alloc = std::allocator<ft::pair<_Key, _Ty> > >
+template <typename _Key, typename _Ty, typename _Compare = std::less<_Key>, typename _Alloc = std::allocator<ft::pair<const _Key, _Ty> > >
 class map
 {
 public:
@@ -36,7 +36,7 @@ public:
 	};
 
 private:
-	typedef ft::rb_tree<value_type, ft::__key_of_value_pair<value_type, key_type>, _Compare>	rb_tree_type;
+	typedef ft::rb_tree<value_type, ft::__key_of_value_pair<value_type, key_type>, _Compare, _Alloc>	rb_tree_type;
 
 	rb_tree_type _t;
 

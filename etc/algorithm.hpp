@@ -1,6 +1,7 @@
 #ifndef ALGORITHM_HPP
 #define ALGORITHM_HPP
 #include "basic_macro.hpp"
+#include "iterator_traits.hpp"
 #include "type_traits.hpp"
 #include <algorithm>
 #include <cstring>

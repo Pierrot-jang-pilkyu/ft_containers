@@ -127,7 +127,7 @@ public:
 
 	reference operator[](difference_type _Off) const
 	{
-		return (current[static_cast<difference_type>(_Off - 1)]);
+		return ( *(*this + _Off) );
 	}
 
 };
