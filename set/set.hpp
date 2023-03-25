@@ -33,7 +33,7 @@ public:
 	typedef _Compare				value_compare;
 
 private:
-	typedef ft::rb_tree<value_type, _Compare>	rb_tree_type;
+	typedef ft::rb_tree<value_type, __key_of_value<value_type>, _Compare>	rb_tree_type;
 
 	rb_tree_type _t;
 
@@ -152,7 +152,7 @@ public:
 
 	template <typename _Key1, typename _Comp1, typename _Alloc1>
 	friend bool operator== (const set<_Key1, _Comp1, _Alloc1>&, const set<_Key1, _Comp1, _Alloc1>&);
-	template <typename _Key1, typename _Ty1, typename _Comp1, typename _Alloc1>
+	template <typename _Key1, typename _Comp1, typename _Alloc1>
 	friend bool operator< (const set<_Key1, _Comp1, _Alloc1>&, const set<_Key1, _Comp1, _Alloc1>&);
 };
 

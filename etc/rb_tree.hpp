@@ -78,6 +78,11 @@ protected:
 	void __get_nil()
 	{
 		node_pointer _Tmp(current);
+		if (_Tmp->__parent == 0 || _Tmp->__left == _Tmp)
+		{
+			_nil = _Tmp;
+			return ;
+		}
 		while (_Tmp != _Tmp->__parent->__parent)
 			_Tmp = _Tmp->__parent;
 		if (_Tmp == _Tmp->__parent->__parent)
@@ -116,6 +121,7 @@ protected:
 			node_pointer __root(_nil->__parent);
 			while ( __root->__right != _nil )
 				__root = __root->__right;
+			__node = __root;
 		}
 		else if (__node->__left != _nil)
 		{
@@ -345,12 +351,6 @@ protected:
 	void __erase_case4(pointer _doubly_black, bool _left_right);
 
 public:
-	void preorder(pointer root, std::string* stringBuilder, std::string padding, const std::string& pointer, const bool hasRightChild) const;
-
-	std::string show_tree() const;
-
-
-
 
 /*
 **	|------------------------------------------------------Member_function----------------------------------------------------|
@@ -463,7 +463,7 @@ protected:
 	pointer __get_nil(pointer __node)
 	{
 		pointer _Tmp(__node);
-		if (_Tmp->__parent == 0)
+		if (_Tmp->__parent == 0 || _Tmp->__left == _Tmp)
 			return (__node);
 		while (_Tmp != _Tmp->__parent->__parent)
 			_Tmp = _Tmp->__parent;
@@ -484,7 +484,7 @@ public:
 */
 
 	size_type size() const {  return (_count); }
-	size_type max_size() const { return ( size_type(-1) / sizseof(__rb_tree_node<_Ty>() ) ); }
+	size_type max_size() const { return ( size_type(-1) ); }
 	bool empty() const { return ( _count == 0 ); }
 
 /*
@@ -1006,7 +1006,7 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::__erase_base(pointer __node)
 	int		_case = 0;
 	bool	_left_right;
 	pointer	parent = __node->__parent;
-	pointer change_node;
+	pointer change_node = NULL;
 
 	if (__node->__left == _nil && __node->__right == _nil)
 	{
@@ -1250,7 +1250,7 @@ rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::__insert_node(const _Ty2& _data)
 		// parent : nil -> root, tail : root -> left or right.
 		parent = tail;
 		_Ty2 var = tail->__value_field;
-		if (_data == var) // iterator.base()->__value_field == _data
+		if (_key_of_value(_data) == _key_of_value(var)) // iterator.base()->__value_field == _data
 			return ( typename ft::pair<typename rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::iterator, bool>(iterator(tail), false) );
 		else if (_compare(_key_of_value(_data), _key_of_value(var)))
 			tail = tail->__left;
@@ -1301,7 +1301,7 @@ rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::__insert_node(pointer __root, con
 		// parent : nil -> root, tail : root -> left or right.
 		parent = tail;
 		_Ty2 var = tail->__value_field;
-		if (_data == var) // iterator.base()->__value_field == _data
+		if (_key_of_value(_data) == _key_of_value(var)) // iterator.base()->__value_field == _data
 			return ( typename ft::pair<typename rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::iterator, bool>(iterator(tail), false) );
 		else if (_compare(_key_of_value(_data), _key_of_value(var)))
 			tail = tail->__left;
@@ -1369,62 +1369,6 @@ void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::erase(iterator __first, iter
 			_Tmp_first++;
 		}
 	}
-}
-
-
-/*
-**	|-------------------------------------------------------------------------------------------------------------------------|
-**	|----------------------------------------------------------Tester---------------------------------------------------------|
-**	|-------------------------------------------------------------------------------------------------------------------------|
-*/
-
-template <typename _Ty2, typename _KeyOfValue, typename _Compare, typename _Alloc2>
-void rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::preorder(pointer root, std::string *stringBuilder, std::string padding, const std::string &__pointer, const bool hasRightChild) const
-{
-	std::string* paddingBuilder;	// 이 loop에서 stringBuilder에 append할 문자열을 의미한다.
-	if (root == _nil) return;
-	else 
-	{
-		paddingBuilder = new std::string(padding);
-		stringBuilder->append("\n").append(padding).append(__pointer);
-		if (root->__color == __rb_tree_black) stringBuilder->append("B");
-		else stringBuilder->append("R");
-		stringBuilder->append(" " + std::to_string(root->__value_field.first) + " " + root->__value_field.second);
-
-		if (hasRightChild) paddingBuilder->append("│  ");
-		else paddingBuilder->append("   ");
-	}
-
-	// [재귀함수]
-	preorder(root->__left, stringBuilder, *paddingBuilder, "├──", root->__right != NULL);
-	preorder(root->__right, stringBuilder, *paddingBuilder, "└──", false);
-
-	delete paddingBuilder;		// 메모리 누수를 막자.
-}
-
-template <typename _Ty2, typename _KeyOfValue, typename _Compare, typename _Alloc2>
-std::string rb_tree<_Ty2, _KeyOfValue, _Compare, _Alloc2>::show_tree() const
-{
-	pointer root = _nil->__parent;
-	if (this->_count == 0) 
-	{	// [오류]: 비어있는 BST에 대한 'show'함수 호출은 오류상황이다.
-		std::cout << "[ERROR] Can't perform 'show' function on empty tree!" << std::endl;
-		return "";
-	}
-
-	std::string* str = new std::string();	// BST 전체를 preorder로 출력할 문자열 포인터를 생성한다.
-	if (root->__color == __rb_tree_black) str->append("B");
-	else str->append("R");
-	str->append(" " + std::to_string(root->__value_field.first) + " " + root->__value_field.second);		// 우선 문자열에 root 노드의 key를 넣어준다.
-
-	// [본격적인 재귀 함수 시작 부분] 
-	preorder(root->__left, str, "", "├──", root->__right != NULL);
-	preorder(root->__right, str, "", "└──", false);
-
-	// 재귀함수가 끝나면 문자열에는 전체 BST의 출력문이 들어있게 된다.
-	std::string returnStr = *str;	// 문자열 포인터를 삭제해주기 위해 지역변수에 복사한다.
-	delete str;						// 문자열 포인터를 delete해서 메모리 누수를 막는다.
-	return returnStr;				// 지역변수를 넘겨주고 프로그램 종료시 컴파일러가 삭제하게 맡긴다.
 }
 
 _FT_END

@@ -17,10 +17,10 @@ template <typename _Key, typename _Ty, typename _Compare = std::less<_Key>, type
 class map
 {
 public:
-	typedef _Key					key_type;
-	typedef _Ty						mapped_type;
-	typedef ft::pair<_Key, _Ty>		value_type;
-	typedef _Compare				key_compare;
+	typedef _Key							key_type;
+	typedef _Ty								mapped_type;
+	typedef ft::pair<const _Key, _Ty>		value_type;
+	typedef _Compare						key_compare;
 
 	class value_compare : public std::binary_function<value_type, value_type, bool>
 	{
@@ -109,6 +109,16 @@ public:
 	size_type size() const { return _t.size(); }
 	size_type max_size() const { return _t.max_size(); }
 
+	mapped_type& at (const key_type& k)
+	{
+		return ( _t.find(ft::pair<_Key, _Ty>(k, _Ty()))->second );
+	}
+	
+	const mapped_type& at (const key_type& k) const
+	{
+		return ( _t.find(ft::pair<_Key, _Ty>(k, _Ty()))->second );
+	}
+
 	_Ty& operator[](const key_type& __k)
 	{
 		iterator __it = lower_bound(__k);
@@ -179,11 +189,6 @@ public:
 	friend bool operator== (const map<_Key1, _Ty1, _Comp1, _Alloc1>&, const map<_Key1, _Ty1, _Comp1, _Alloc1>&);
 	template <typename _Key1, typename _Ty1, typename _Comp1, typename _Alloc1>
 	friend bool operator< (const map<_Key1, _Ty1, _Comp1, _Alloc1>&, const map<_Key1, _Ty1, _Comp1, _Alloc1>&);
-
-
-
-
-	std::string show_tree() const { return _t.show_tree(); }
 
 };
 
